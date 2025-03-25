@@ -16,7 +16,7 @@ A powerful and user-friendly tool for converting PSD files and other image forma
 
 ## Installation
 
-1. Download the latest release from the [Releases](https://github.com/yourusername/psd-converter/releases) page
+1. Download the latest release from the [Releases](https://github.com/GuptaAman777/psd-converter/releases) page
 2. Extract the ZIP file (if applicable)
 3. Run the `PSD Converter.exe` file
 
