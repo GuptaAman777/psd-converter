@@ -71,11 +71,6 @@ The application uses:
 
 [MIT License](LICENSE)
 
-## Acknowledgements
-
-- Icons by [Icon Source]
-- Special thanks to all contributors and testers
-
 ## Support
 
 If you encounter any issues or have questions, please [open an issue](https://github.com/guptaaman777/psd-converter/issues) on GitHub.
