@@ -2,7 +2,7 @@
 
 A powerful and user-friendly tool for converting PSD files and other image formats to various output formats.
 
-![PSD Converter Screenshot](screenshot.png)
+![PSD Converter Screenshot]([screenshot.png](https://github.com/GuptaAman777/psd-converter/blob/main/Screenshot.png?raw=true))
 
 ## Features
 
