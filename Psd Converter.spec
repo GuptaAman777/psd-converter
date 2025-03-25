@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['e:\\PSD CONVERTER\\PSD8\\icon.ico'],
+    icon=['e:\\PSD CONVERTER\\PSD8\\Psd Converter.ico'],
 )
