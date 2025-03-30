@@ -1,4 +1,4 @@
-# PSD Converter Pro
+# PSD Converter
 
 ![PSD Converter Pro](screenshots/app_screenshot.png)
 
