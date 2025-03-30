@@ -1,6 +1,6 @@
 # PSD Converter
 
-![PSD Converter Pro](screenshots/app_screenshot.png)
+![PSD Converter Pro](screenshots/home_screenshot.png)
 
 A powerful and user-friendly tool for converting PSD files and other image formats with AI upscaling capabilities.
 
