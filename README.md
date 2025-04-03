@@ -2,7 +2,8 @@
 
 A modern GUI application for converting images and PSD files between different formats, with support for AI upscaling using RealESRGAN.
 
-![App Screenshot](screenshots/home_screenshot.png)
+![Home](screenshots/screenshot1.png)
+![Settings](screenshots/screenshot2.png)
 
 ## Features
 
