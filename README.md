@@ -1,81 +1,74 @@
-# PSD Converter
+# Image & PSD Converter
 
-![PSD Converter](screenshots/home_screenshot.png)
+A modern GUI application for converting images and PSD files between different formats, with support for AI upscaling using RealESRGAN.
 
-A powerful and user-friendly tool for converting PSD files and other image formats with AI upscaling capabilities.
+![App Screenshot](screenshots/home_screenshot.png)
 
 ## Features
 
-- **Multi-format Support**: Convert between PNG, JPEG, BMP, GIF, TIFF, WEBP, PDF, and PSD files
-- **AI Upscaling**: Enhance image quality with built-in AI upscaling (2x, 3x, or 4x)
-- **Batch Processing**: Convert multiple files or entire folders at once
-- **Modern UI**: Clean, intuitive interface with dark mode
-- **Progress Tracking**: Real-time conversion progress with ETA and speed indicators
-- **Detailed Statistics**: View conversion statistics including file size reduction/increase
+- Convert between multiple image formats:
+  - PNG
+  - JPEG
+  - BMP
+  - GIF
+  - TIFF
+  - WEBP
+  - PDF
+  - PSD (Photoshop Documents)
+- AI upscaling support using RealESRGAN
+- Batch conversion support
+- Modern, user-friendly interface
+- Real-time progress tracking with ETA
+- Customizable quality settings for each format
+- GPU acceleration support for upscaling
 
-## Installation
+## Download
 
-1. Download the latest release from the [Releases](https://github.com/GuptaAman777/psd-converter/releases) page
-2. Extract the ZIP file to a location of your choice
-3. Run `PSDConverterPro.exe` - no installation required!
+Download the latest release from the [Releases](https://github.com/yourusername/ImageConverter/releases) page.
 
 ## Usage
 
-1. **Select Files or Folder**: Click "Select Files" or "Select Folder" to choose what you want to convert
-2. **Choose Output Format**: Select your desired output format from the dropdown menu
-3. **Enable AI Upscaling (Optional)**: Check "Enable AI Upscaling" and select a scale factor if desired
-4. **Select Output Directory**: Choose where to save the converted files
-5. **Convert**: Click the "Convert" button to start the conversion process
+1. Launch the application
+2. Select your desired output format
+3. Choose quality settings (optional)
+4. Enable AI upscaling if desired (for supported formats)
+5. Select input files or folders
+6. Choose output location
+7. Click "Convert" to begin
 
-## Supported Formats
+## Settings
 
-### Input Formats
-- PSD (Photoshop Document)
-- PNG
-- JPEG/JPG
-- BMP
-- GIF
-- TIFF
-- WEBP
-- PDF
+### Image Quality Settings
+- JPEG Quality: Maximum, High, Medium, Low
+- WEBP Quality: Maximum, High, Medium, Low
+- PNG Compression: Maximum, Normal, Fast, None
 
-### Output Formats
-- PNG
-- JPEG/JPG
-- BMP
-- GIF
-- TIFF
-- WEBP
-- PDF
+### PDF Settings
+- Resolution: 72 DPI, 150 DPI, 300 DPI, 600 DPI
+- Quality: High, Medium, Low
+
+### Upscaling Options
+- Available for: PNG, JPEG, WEBP
+- Scale factors: 2x, 3x, 4x
+- Requires compatible GPU for optimal performance
 
 ## System Requirements
 
 - Windows 10 or later
-- 4GB RAM minimum (8GB recommended for AI upscaling)
+- 4GB RAM minimum (8GB recommended)
+- GPU with Vulkan support (for AI upscaling)
 - 500MB free disk space
-- For AI upscaling: NVIDIA GPU with CUDA support recommended
 
-## License
+## Known Limitations
 
-For personal use only. For commercial licensing, please contact: [github.com/GuptaAman777](https://github.com/GuptaAman777)
+- PDF conversion currently supports single-page output
+- Large PSD files may require additional memory
+- Upscaling is limited to specific output formats
 
 ## Credits
 
-- AI upscaling powered by [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN)
-- PSD file handling via [psd-tools](https://github.com/psd-tools/psd-tools)
-- PDF processing via [PyMuPDF](https://github.com/pymupdf/PyMuPDF)
-
-## Troubleshooting
-
-**Q: The application crashes when processing large files**  
-A: Try converting files individually rather than in batch for very large PSD files.
-
-**Q: AI upscaling is slow**  
-A: AI upscaling is computationally intensive. Performance is better on systems with dedicated GPUs.
-
-**Q: Some PDF files don't convert properly**  
-A: The application currently supports single-page PDF conversion. Multi-page PDFs will only convert the first page.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
+This application uses the following open-source projects:
+- [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) for AI upscaling
+- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) for the GUI
+- [Pillow](https://python-pillow.org/) for image processing
+- [psd-tools](https://psd-tools.readthedocs.io/) for PSD file support
