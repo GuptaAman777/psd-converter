@@ -24,7 +24,7 @@ A modern GUI application for converting images and PSD files between different f
 
 ## Download
 
-Download the latest release from the [Releases](https://github.com/yourusername/ImageConverter/releases) page.
+Download the latest release from the [Releases](https://github.com/GuptaAman777/psd-converter/releases) page.
 
 ## Usage
 
