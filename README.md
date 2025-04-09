@@ -1,75 +1,120 @@
 # Image & PSD Converter
 
-A modern GUI application for converting images and PSD files between different formats, with support for AI upscaling using RealESRGAN.
-
-![Home](screenshots/screenshot1.png)
-![Settings](screenshots/screenshot2.png)
+A powerful desktop application for converting, upscaling, and enhancing image files including PSD files.
 
 ## Features
 
-- Convert between multiple image formats:
-  - PNG
-  - JPEG
-  - BMP
-  - GIF
-  - TIFF
-  - WEBP
-  - PDF
-  - PSD (Photoshop Documents)
-- AI upscaling support using RealESRGAN
-- Batch conversion support
-- Modern, user-friendly interface
-- Real-time progress tracking with ETA
-- Customizable quality settings for each format
-- GPU acceleration support for upscaling
+### File Conversion
+- Convert between multiple image formats (PNG, JPG, WEBP, TIFF, BMP, GIF)
+- Convert PSD files to standard image formats
+- Convert PDF files to images
+- Batch processing for multiple files
+- Preserve transparency when supported by the output format
 
-## Download
+### AI Enhancement
+- AI-powered upscaling using RealESRGAN technology
+- Increase image resolution by 2x, 3x, or 4x
+- Multiple AI models for different image types
+- Noise reduction and image enhancement
 
-Download the latest release from the [Releases](https://github.com/GuptaAman777/psd-converter/releases) page.
-
-## Usage
-
-1. Launch the application
-2. Select your desired output format
-3. Choose quality settings (optional)
-4. Enable AI upscaling if desired (for supported formats)
-5. Select input files or folders
-6. Choose output location
-7. Click "Convert" to begin
-
-## Settings
-
-### Image Quality Settings
-- JPEG Quality: Maximum, High, Medium, Low
-- WEBP Quality: Maximum, High, Medium, Low
-- PNG Compression: Maximum, Normal, Fast, None
-
-### PDF Settings
-- Resolution: 72 DPI, 150 DPI, 300 DPI, 600 DPI
-- Quality: High, Medium, Low
-
-### Upscaling Options
-- Available for: PNG, JPEG, WEBP
-- Scale factors: 2x, 3x, 4x
-- Requires compatible GPU for optimal performance
+### Advanced Settings
+- Adjustable quality settings for JPG, WEBP, and PNG
+- PDF resolution control (72 DPI to 600 DPI)
+- Compression level options for optimizing file size
+- Batch processing with progress tracking
 
 ## System Requirements
 
-- Windows 10 or later
-- 4GB RAM minimum (8GB recommended)
-- GPU with Vulkan support (for AI upscaling)
-- 500MB free disk space
+- Windows 10 or later (64-bit)
+- 4GB RAM minimum (8GB+ recommended for AI upscaling)
+- GPU with DirectX 12 support recommended for AI features
+- 500MB free disk space for application
+- Additional space for processed files
 
-## Known Limitations
+## Installation
 
-- PDF conversion currently supports single-page output
-- Large PSD files may require additional memory
-- Upscaling is limited to specific output formats
+1. Download the latest release from the [Releases](https://github.com/GuptaAman777/image-psd-converter/releases) page
+2. Run the installer and follow the on-screen instructions
+3. No additional software installation required - all dependencies are included
 
-## Credits
+## Usage Guide
 
-This application uses the following open-source projects:
-- [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN) for AI upscaling
-- [PyQt6](https://www.riverbankcomputing.com/software/pyqt/) for the GUI
-- [Pillow](https://python-pillow.org/) for image processing
-- [psd-tools](https://psd-tools.readthedocs.io/) for PSD file support
+### Basic Conversion
+
+1. **Select Files**: Click "Add Files" or drag and drop files into the application
+2. **Choose Output Format**: Select your desired output format from the dropdown menu
+3. **Set Output Location**: Choose where to save the converted files
+4. **Convert**: Click the "Convert" button to begin processing
+
+### AI Upscaling
+
+1. **Enable Upscaling**: Check the "Enable AI Upscaling" option
+2. **Select Scale Factor**: Choose 2x, 3x, or 4x upscaling
+3. **Select Model**: Choose the appropriate AI model for your image type
+4. **Process**: Click "Upscale" to enhance your images
+
+### Batch Processing
+
+1. **Add Multiple Files**: Select multiple files or entire folders
+2. **Configure Settings**: Set your desired output format and quality
+3. **Start Batch**: Click "Convert" to process all files
+4. **Monitor Progress**: View real-time progress with estimated completion time
+
+## Quality Settings
+
+### JPEG Quality
+- **Maximum**: Highest quality, larger file size
+- **High**: Very good quality with reasonable file size
+- **Medium**: Good quality with smaller file size
+- **Low**: Reduced quality with minimal file size
+
+### PNG Compression
+- **Maximum**: Highest compression, smaller files (slower)
+- **Normal**: Balanced compression and speed
+- **Fast**: Quick compression with larger files
+- **None**: No compression, largest file size but fastest
+
+### PDF Resolution
+- **72 DPI**: Web quality
+- **150 DPI**: Good for general use
+- **300 DPI**: Print quality
+- **600 DPI**: High-detail print quality
+
+## AI Models
+
+- **anime**: Optimized for anime and cartoon images
+- **photo**: Best for photographs and realistic images
+- **general**: Good all-purpose model for mixed content
+
+## Troubleshooting
+
+### Common Issues
+
+- **Slow Processing**: AI upscaling is GPU-intensive. Try using a smaller scale factor or processing fewer files at once.
+- **Out of Memory**: Close other applications or reduce the number of files being processed simultaneously.
+- **Unsupported File**: Ensure your files are not corrupted and are in a supported format.
+
+### GPU Compatibility
+
+The application will automatically detect your GPU capabilities. For optimal AI upscaling performance:
+- Use a dedicated GPU rather than integrated graphics
+- Ensure your graphics drivers are up to date
+- Close other GPU-intensive applications while processing
+
+## Privacy
+
+This application processes all files locally on your computer. No files or data are uploaded to external servers.
+
+## License
+
+This software is released under the MIT License. See the LICENSE file for details.
+
+## Acknowledgments
+
+- RealESRGAN for AI upscaling technology
+- PyQt for the user interface framework
+- Pillow for image processing capabilities
+
+## Support
+
+For issues, feature requests, or questions, please open an issue on the [GitHub repository](https://github.com/GuptaAman777/image-psd-converter/issues).
