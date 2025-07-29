@@ -2,8 +2,6 @@
 
 A powerful desktop application for converting, upscaling, and enhancing image files including PSD files.
 
-[CODE GENERATED WITH THE HELP OF AI (CLAUDE SONNET 3.7/3.5)]
-
 ## Features
 
 ### File Conversion
