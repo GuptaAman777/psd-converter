@@ -1,4 +1,4 @@
-# PSD 2.0 (ImageTool)
+# ImageTool
 
 A powerful, all-in-one desktop application for image processing built with Python and PyQt6. This tool provides an intuitive graphical interface for converting, upscaling, denoising, and stitching images.
 
@@ -14,7 +14,7 @@ A powerful, all-in-one desktop application for image processing built with Pytho
 ## 📂 Project Structure
 
 ```text
-PSD 2.0 - Copy/
+ImageTool - Copy/
 │
 ├── main.py                     # Application entry point
 ├── requirements.txt            # Python dependencies
