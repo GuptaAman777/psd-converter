@@ -1,0 +1,6 @@
+PyQt6
+Pillow
+psd-tools
+PyMuPDF
+requests
+psutil
