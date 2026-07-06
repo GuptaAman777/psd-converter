@@ -18,9 +18,6 @@ ImageTool - Copy/
 │
 ├── main.py                     # Application entry point
 ├── requirements.txt            # Python dependencies
-├── fix_panel.py                # Standalone script/utility for panels
-├── fix_upscale.py              # Standalone script/utility for upscaler
-│
 └── src/                        # Main source code directory
     ├── config.py               # Default settings and configurations
     ├── constants.py            # Global constants and app-wide values
