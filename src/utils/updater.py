@@ -1,5 +1,5 @@
 import requests
-from PyQt6.QtCore import QThread, pyqtSignal
+from src.core.signals import WorkerThread, Signal
 
 def compare_versions(v1, v2):
     """
@@ -31,9 +31,9 @@ def compare_versions(v1, v2):
         if v1 > v2: return 1
         return 0
 
-class UpdateCheckerThread(QThread):
-    update_result = pyqtSignal(dict, bool, str)
-    
+class UpdateCheckerThread(WorkerThread):
+    update_result = Signal(dict, bool, str)
+
     def __init__(self, current_version, releases_url):
         super().__init__()
         self.current_version = current_version

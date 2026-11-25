@@ -1,6 +1,6 @@
 import sys
 import time
-from PyQt6.QtCore import QObject, pyqtSignal
+from src.core.signals import Signal
 
 class StdoutRedirector:
     def __init__(self, logger_instance):
@@ -31,11 +31,10 @@ class StdoutRedirector:
         except Exception:
             pass
 
-class AppLogger(QObject):
-    log_signal = pyqtSignal(str, str, str) # timestamp, level, message
-    
+class AppLogger:
+    log_signal = Signal(str, str, str)  # timestamp, level, message
+
     def __init__(self):
-        super().__init__()
         self.log_messages = []
         self.stdout_redirector = None
         
@@ -52,6 +51,8 @@ class AppLogger(QObject):
             timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
             log_entry = {"timestamp": timestamp, "level": level, "message": message}
             self.log_messages.append(log_entry)
+            if len(self.log_messages) > 2000:
+                self.log_messages = self.log_messages[-1500:]
             
             self.log_signal.emit(timestamp, level, message)
             

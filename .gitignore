@@ -1,0 +1,31 @@
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Packaging & release outputs
+build/
+dist/
+release/
+*.spec
+!.gitignore
+
+# Frontend dependencies & temp (frontend/dist is kept for zero-build Python launches)
+frontend/node_modules/
+frontend/.vite/
+
+# Local user preferences & installer markers
+settings.json
+.installed
+imagetool_logs.txt
+
+# Temp folders
+temp_upscale/
+src/core/temp/
+*.part
