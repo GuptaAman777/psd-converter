@@ -1,4 +1,4 @@
-# ImageTool Liquid Studio v7.0 — PSD & AI Image Suite
+# ImageTool v7.0 — PSD & AI Image Suite
 
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![UI Stack](https://img.shields.io/badge/UI-React%2019%20%2B%20FastAPI%20%2B%20WebView2-0a84ff.svg)](https://github.com/GuptaAman777/psd-converter)
@@ -6,13 +6,13 @@
 [![Hardware Acceleration](https://img.shields.io/badge/Acceleration-Vulkan%20%7C%20Multi--GPU%20%7C%20CPU-purple.svg)](https://www.vulkan.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-An offline, hardware-accelerated desktop image processing studio for batch format conversion, Photoshop `.psd` layer extraction, multi-page `.pdf` rasterization, local Vulkan NCNN AI super-resolution (`1x–8x`), multi-engine AI denoising with grain preservation, continuous strip/grid stitching, and split-screen visual inspection — built on a **FastAPI + React 19 + Tailwind CSS v4 + Framer Motion + Edge WebView2 Liquid Glass** architecture.
+An offline, hardware-accelerated desktop application for batch format conversion, Photoshop `.psd` layer extraction, multi-page `.pdf` rasterization, local Vulkan NCNN AI super-resolution (`1x–8x`), multi-engine AI denoising with grain preservation, continuous strip/grid stitching, and split-screen visual comparison — built on **FastAPI + React 19 + Tailwind CSS v4 + Edge WebView2**.
 
 ---
 
 ## Key Highlights
 
-* **Apple Liquid Glass Studio (`v7.0`)**: Hardware-composited Edge WebView2 desktop shell with 6 live ambient themes (`Blue`, `Red Crimson`, true-black monochrome `Black (OLED Dark)`, `Purple Cyberpunk`, `Green Emerald`, `Amber Sunset`).
+* **Modern Desktop UI (`v7.0`)**: Hardware-accelerated Edge WebView2 interface with 6 live themes (`Blue`, `Red Crimson`, true-black monochrome `Black (OLED Dark)`, `Purple Cyberpunk`, `Green Emerald`, `Amber Sunset`).
 * **Upgraded 2025 Neural NCNN Backends**:
   * **Upscayl / Real-ESRGAN (`upscayl-bin` 2025-12-07 + `realesrgan-ncnn-vulkan`)** supporting `AnimeVideoV3`, `RealESRGAN+`, `RealESRNet+`, `Classic ESRGAN`, plus custom output scaling (`-z/-s`).
   * **Real-CUGAN (`20220728`)** with configurable **SyncGap (`-c`)** tile seam synchronization across `models-se`, `models-pro`, and `models-nose`.
@@ -45,7 +45,7 @@ psd-converter/
 ├── main.py                      # Application entry point
 ├── requirements.txt             # Python dependencies (pywebview, fastapi, uvicorn, Pillow, psd-tools, PyMuPDF)
 ├── frontend/
-│   ├── src/                     # React 19 + Tailwind CSS v4 + Framer Motion Liquid Glass UI
+│   ├── src/                     # React 19 + Tailwind CSS v4 + Framer Motion UI
 │   └── dist/                    # Prebuilt production bundle served by FastAPI
 ├── src/
 │   ├── constants.py             # Version, formats, themes, GitHub URLs
@@ -70,7 +70,7 @@ psd-converter/
    ```bash
    pip install -r requirements.txt
    ```
-2. **Run ImageTool Liquid Studio**:
+2. **Run ImageTool**:
    ```bash
    python main.py
    ```

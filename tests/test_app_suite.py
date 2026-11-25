@@ -645,7 +645,7 @@ class TestImageToolSuite(unittest.TestCase):
         client = TestClient(create_app())
         home = client.get("/")
         self.assertEqual(home.status_code, 200)
-        self.assertIn("ImageTool Liquid Studio", home.text)
+        self.assertIn("ImageTool — PSD & AI Image Suite", home.text)
 
         logs_resp = client.get("/api/logs")
         self.assertEqual(logs_resp.status_code, 200)

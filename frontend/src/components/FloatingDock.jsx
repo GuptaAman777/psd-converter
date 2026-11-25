@@ -48,7 +48,7 @@ export default function FloatingDock({
               </span>
             </div>
             <div className="hidden sm:block text-[10px] text-white/50 font-medium tracking-wide">
-              Liquid Glass Studio
+              PSD &amp; AI Image Suite
             </div>
           </div>
         </div>

@@ -94,7 +94,7 @@ def launch_liquid_studio():
 
     bridge = DesktopBridge()
     win = webview.create_window(
-        title=f"ImageTool Liquid Studio — PSD & AI Image Suite (v{APP_VERSION})",
+        title=f"ImageTool — PSD & AI Image Suite (v{APP_VERSION})",
         url=f"http://127.0.0.1:{port}/",
         js_api=bridge,
         width=1320,

@@ -166,7 +166,7 @@ const MANUAL_SECTIONS = [
     jumpTab: "hardware",
     jumpLabel: "Inspect GPUs",
     overview:
-      "Tune Vulkan NCNN GPU memory, threading, and TTA ensemble passes, or use keyboard shortcuts to navigate the studio effortlessly.",
+      "Tune Vulkan NCNN GPU memory, threading, and TTA ensemble passes, or use keyboard shortcuts to switch tools quickly.",
     steps: [
       "Click the top-right GPU status pill (or Inspect GPUs here) to verify detected physical Vulkan GPUs and bundled AI engine binaries.",
       "Under Hardware, Threads & Naming in Upscaler/Denoiser, keep VRAM Tile Size at Auto (0) unless experiencing GPU memory pressure, then lower to 200, 100, or 64.",
@@ -176,7 +176,7 @@ const MANUAL_SECTIONS = [
     controls: [
       { name: "Keyboard Shortcuts", desc: "Ctrl+1 Converter • Ctrl+2 AI Upscaler • Ctrl+3 AI Denoiser • Ctrl+4 Stitcher • Ctrl+5 Settings & Manuals • Ctrl+B Before/After Compare." },
       { name: "Multi-GPU & CPU (-1)", desc: "Select GPU 0, GPU 1, etc. for laptops with dual iGPU/dGPU setups, or force CPU Fallback (-1) for compatibility debugging." },
-      { name: "Preferences & Themes", desc: "Switch between 6 GPU-composited Liquid Glass themes and persist default JPEG/WEBP/PNG/EXIF/PDF settings in local settings.json." },
+      { name: "Preferences & Themes", desc: "Switch between 6 color themes and persist default JPEG/WEBP/PNG/EXIF/PDF settings in local settings.json." },
       { name: "Activity Logs & Updates", desc: "Filter live INFO/SUCCESS/WARNING/ERROR/TERMINAL logs, export imagetool_logs.txt, and check GitHub releases for GuptaAman777/psd-converter." },
     ],
     tips: [
@@ -337,7 +337,7 @@ export default function SettingsWorkspace({
       <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-1 space-y-3 sm:space-y-3.5">
         {subTab === "prefs" && (
           <>
-            <GlassCard title="Liquid Glass Theme Studio">
+            <GlassCard title="Appearance & Themes">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2.5">
                 {Object.entries(LIQUID_THEMES).map(([name, pal]) => {
                   const active = activeTheme === name;
@@ -469,7 +469,7 @@ export default function SettingsWorkspace({
               >
                 <div className="text-[12px] text-white/70 leading-relaxed">
                   Download optional NCNN models on demand (4x-UltraSharp, 4x-Remacri, Digital Art 4x, 4x-Nomos8kSC,
-                  Real-ESRGAN General v3, 4x-NMKD Siax, Uniscale Restore) directly into your local studio for instant use in
+                  Real-ESRGAN General v3, 4x-NMKD Siax, Uniscale Restore) directly into your local models folder for instant use in
                   the AI Upscaler and Converter.{" "}
                   <span className="text-white font-semibold">
                     {(bootstrap?.model_catalog || []).filter((m) => m.installed).length} of{" "}
@@ -640,11 +640,11 @@ export default function SettingsWorkspace({
                     </span>
                   </div>
                   <p className="text-[12.5px] text-white/70 leading-relaxed">
-                    Open-source desktop batch graphics studio from{" "}
+                    Open-source desktop batch image processor from{" "}
                     <span className="text-white font-semibold">GuptaAman777/psd-converter</span>. Combines Photoshop{" "}
                     <code>.psd</code> layer extraction, multi-page <code>.pdf</code> rasterization, GPU-accelerated
                     Vulkan NCNN AI Super-Resolution & Denoising, strip/grid image stitching, and split-screen visual
-                    comparison inside a hardware-composited Apple Liquid Glass interface.
+                    comparison inside a hardware-accelerated desktop interface.
                   </p>
                   <div className="text-[14px] font-bold text-white pt-1">Made by GuptaAman777</div>
                 </div>
@@ -701,7 +701,7 @@ export default function SettingsWorkspace({
             </GlassCard>
 
             <GlassCard
-              title="Interactive Studio Manuals & User Guide"
+              title="Manuals & User Guide"
               rightHeader={
                 <div className="relative w-44 sm:w-56">
                   <Search className="w-3.5 h-3.5 text-white/45 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />

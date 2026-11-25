@@ -262,7 +262,7 @@ def create_app(frontend_dist: Optional[str] = None) -> FastAPI:
         hub.loop = asyncio.get_running_loop()
         yield
 
-    app = FastAPI(title="ImageTool Liquid Studio API", version=APP_VERSION, lifespan=lifespan)
+    app = FastAPI(title="ImageTool API", version=APP_VERSION, lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
