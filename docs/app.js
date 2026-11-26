@@ -16,6 +16,9 @@
       panelBg: "linear-gradient(165deg, rgba(28, 34, 54, 0.62), rgba(14, 17, 29, 0.52))",
       cardBg: "linear-gradient(160deg, rgba(255, 255, 255, 0.068), rgba(255, 255, 255, 0.024))",
       glassBorder: "rgba(255, 255, 255, 0.13)",
+      mobileDockBg: "#0e1320",
+      mobilePanelBg: "#101524",
+      mobileCardBg: "#161c30",
     },
     crimson: {
       name: "Red (Crimson)",
@@ -33,6 +36,9 @@
       panelBg: "linear-gradient(165deg, rgba(28, 34, 54, 0.62), rgba(14, 17, 29, 0.52))",
       cardBg: "linear-gradient(160deg, rgba(255, 255, 255, 0.068), rgba(255, 255, 255, 0.024))",
       glassBorder: "rgba(255, 255, 255, 0.13)",
+      mobileDockBg: "#190c13",
+      mobilePanelBg: "#150a10",
+      mobileCardBg: "#1e1018",
     },
     oled: {
       name: "Black (OLED Dark)",
@@ -50,6 +56,9 @@
       panelBg: "linear-gradient(165deg, rgba(6, 6, 8, 0.90), rgba(0, 0, 0, 0.96))",
       cardBg: "linear-gradient(160deg, rgba(255, 255, 255, 0.022), rgba(0, 0, 0, 0.80))",
       glassBorder: "rgba(255, 255, 255, 0.10)",
+      mobileDockBg: "#060608",
+      mobilePanelBg: "#040406",
+      mobileCardBg: "#0b0b0e",
     },
     purple: {
       name: "Purple (Cyberpunk)",
@@ -67,6 +76,9 @@
       panelBg: "linear-gradient(165deg, rgba(28, 34, 54, 0.62), rgba(14, 17, 29, 0.52))",
       cardBg: "linear-gradient(160deg, rgba(255, 255, 255, 0.068), rgba(255, 255, 255, 0.024))",
       glassBorder: "rgba(255, 255, 255, 0.13)",
+      mobileDockBg: "#140e24",
+      mobilePanelBg: "#110c1e",
+      mobileCardBg: "#1a132c",
     },
     emerald: {
       name: "Green (Emerald)",
@@ -84,6 +96,9 @@
       panelBg: "linear-gradient(165deg, rgba(28, 34, 54, 0.62), rgba(14, 17, 29, 0.52))",
       cardBg: "linear-gradient(160deg, rgba(255, 255, 255, 0.068), rgba(255, 255, 255, 0.024))",
       glassBorder: "rgba(255, 255, 255, 0.13)",
+      mobileDockBg: "#0a1912",
+      mobilePanelBg: "#09150f",
+      mobileCardBg: "#0f2118",
     },
     amber: {
       name: "Amber (Sunset)",
@@ -101,6 +116,9 @@
       panelBg: "linear-gradient(165deg, rgba(28, 34, 54, 0.62), rgba(14, 17, 29, 0.52))",
       cardBg: "linear-gradient(160deg, rgba(255, 255, 255, 0.068), rgba(255, 255, 255, 0.024))",
       glassBorder: "rgba(255, 255, 255, 0.13)",
+      mobileDockBg: "#1b1209",
+      mobilePanelBg: "#160f07",
+      mobileCardBg: "#22170c",
     },
   };
 
@@ -174,7 +192,8 @@
   };
 
   function applyTheme(key) {
-    const t = THEMES[key] || THEMES.blue;
+    const chosen = THEMES[key] ? key : "blue";
+    const t = THEMES[chosen];
     const root = document.documentElement.style;
     root.setProperty("--accent", t.accent);
     root.setProperty("--accent-hover", t.accentHover);
@@ -190,18 +209,24 @@
     root.setProperty("--panel-bg", t.panelBg);
     root.setProperty("--card-bg", t.cardBg);
     root.setProperty("--glass-border", t.glassBorder);
+    root.setProperty("--mobile-dock-bg", t.mobileDockBg);
+    root.setProperty("--mobile-panel-bg", t.mobilePanelBg);
+    root.setProperty("--mobile-card-bg", t.mobileCardBg);
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute("content", t.bgDeep);
     document.querySelectorAll(".theme-dot").forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.theme === key);
+      btn.classList.toggle("active", btn.dataset.theme === chosen);
     });
     try {
-      localStorage.setItem("imagetool_showcase_theme", key);
+      localStorage.setItem("ga777-accent-palette", chosen);
+      localStorage.setItem("imagetool_showcase_theme", chosen);
     } catch (_) {}
   }
 
-  // Init Theme Switcher
+  // Init Theme Switcher (synced across guptaaman777.me ecosystem)
   let savedTheme = "blue";
   try {
-    const s = localStorage.getItem("imagetool_showcase_theme");
+    const s = localStorage.getItem("ga777-accent-palette") || localStorage.getItem("imagetool_showcase_theme");
     if (s && THEMES[s]) savedTheme = s;
   } catch (_) {}
   applyTheme(savedTheme);
@@ -346,14 +371,15 @@
         draggingSplit = true;
         draggingPan = false;
         lockedAxis = true;
+        stage.classList.add("is-interacting");
         knob.setPointerCapture(e.pointerId);
         updateSplitFromClientX(e.clientX);
       });
       knob.addEventListener("pointermove", (e) => {
         if (draggingSplit) updateSplitFromClientX(e.clientX);
       });
-      knob.addEventListener("pointerup", () => { draggingSplit = false; });
-      knob.addEventListener("pointercancel", () => { draggingSplit = false; });
+      knob.addEventListener("pointerup", () => { draggingSplit = false; stage.classList.remove("is-interacting"); });
+      knob.addEventListener("pointercancel", () => { draggingSplit = false; stage.classList.remove("is-interacting"); });
     }
 
     // Mouse wheel zoom anchored at cursor (lets page scroll normally if at 1x scrolling down)
@@ -387,6 +413,7 @@
         draggingSplit = false;
         draggingPan = false;
         pinchActive = true;
+        stage.classList.add("is-interacting");
         const rect = stage.getBoundingClientRect();
         const m = touchMetrics(e.touches[0], e.touches[1]);
         pinchDist0 = m.dist;
@@ -414,7 +441,10 @@
     }, { passive: false });
 
     stage.addEventListener("touchend", (e) => {
-      if (e.touches.length < 2) pinchActive = false;
+      if (e.touches.length < 2) {
+        pinchActive = false;
+        stage.classList.remove("is-interacting");
+      }
     });
 
     // Single-pointer pan (when zoomed > 1x) or split-drag (when 1x)
@@ -427,7 +457,7 @@
         panStartY = e.clientY;
         panOriginX = panX;
         panOriginY = panY;
-        stage.classList.add("is-panning");
+        stage.classList.add("is-panning", "is-interacting");
         stage.setPointerCapture(e.pointerId);
         return;
       }
@@ -435,6 +465,7 @@
       startY = e.clientY;
       lockedAxis = false;
       draggingSplit = true;
+      stage.classList.add("is-interacting");
       if (e.pointerType === "mouse") {
         lockedAxis = true;
         stage.setPointerCapture(e.pointerId);
@@ -457,6 +488,7 @@
         if (dx < 6 && dy < 6) return;
         if (dy > dx) {
           draggingSplit = false;
+          stage.classList.remove("is-interacting");
           return;
         }
         lockedAxis = true;
@@ -467,7 +499,7 @@
     const endStagePointer = () => {
       draggingSplit = false;
       draggingPan = false;
-      stage.classList.remove("is-panning");
+      stage.classList.remove("is-panning", "is-interacting");
     };
     stage.addEventListener("pointerup", endStagePointer);
     stage.addEventListener("pointercancel", endStagePointer);
@@ -615,7 +647,53 @@
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
+  const REL_CACHE_KEY = "ga777-imagetool-rel-v1";
+  const REL_CACHE_TTL_MS = 15 * 60 * 1000;
+
+  function applyReleaseData(rel) {
+    if (!rel) return;
+    const tag = rel.tag_name || "7.5";
+    const verBadge = document.getElementById("releaseBadge");
+    const heroEyebrow = document.getElementById("heroEyebrow");
+    if (verBadge) verBadge.textContent = `v${tag.replace(/^v/, "")}`;
+    if (heroEyebrow) heroEyebrow.textContent = `v${tag.replace(/^v/, "")} Latest Release • Windows 10 / 11 (x64)`;
+
+    const assets = Array.isArray(rel.assets) ? rel.assets : [];
+    const setup = assets.find((a) => /setup.*\.exe$/i.test(a.name));
+    const portable = assets.find((a) => /portable.*\.zip$/i.test(a.name));
+
+    if (setup) {
+      document.querySelectorAll("[data-dl-setup]").forEach((a) => {
+        a.href = setup.browser_download_url;
+      });
+      const sz = document.getElementById("setupSize");
+      if (sz && setup.size) sz.textContent = `${setup.name} • ${formatMiB(setup.size)}`;
+    }
+    if (portable) {
+      document.querySelectorAll("[data-dl-portable]").forEach((a) => {
+        a.href = portable.browser_download_url;
+      });
+      const sz = document.getElementById("portableSize");
+      if (sz && portable.size) sz.textContent = `${portable.name} • ${formatMiB(portable.size)}`;
+    }
+  }
+
   async function hydrateLatestRelease() {
+    try {
+      const raw = sessionStorage.getItem(REL_CACHE_KEY);
+      if (raw) {
+        const cached = JSON.parse(raw);
+        if (cached && Date.now() - cached.ts < REL_CACHE_TTL_MS && cached.rel) {
+          applyReleaseData(cached.rel);
+          return;
+        }
+      }
+    } catch (_) {}
+
+    if (navigator.connection && navigator.connection.saveData) {
+      return;
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 4000);
     try {
@@ -625,30 +703,10 @@
       });
       if (!resp.ok) return;
       const rel = await resp.json();
-      const tag = rel.tag_name || "7.5";
-      const verBadge = document.getElementById("releaseBadge");
-      const heroEyebrow = document.getElementById("heroEyebrow");
-      if (verBadge) verBadge.textContent = `v${tag.replace(/^v/, "")}`;
-      if (heroEyebrow) heroEyebrow.textContent = `v${tag.replace(/^v/, "")} Latest Release • Windows 10 / 11 (x64)`;
-
-      const assets = Array.isArray(rel.assets) ? rel.assets : [];
-      const setup = assets.find((a) => /setup.*\.exe$/i.test(a.name));
-      const portable = assets.find((a) => /portable.*\.zip$/i.test(a.name));
-
-      if (setup) {
-        document.querySelectorAll("[data-dl-setup]").forEach((a) => {
-          a.href = setup.browser_download_url;
-        });
-        const sz = document.getElementById("setupSize");
-        if (sz && setup.size) sz.textContent = `${setup.name} • ${formatMiB(setup.size)}`;
-      }
-      if (portable) {
-        document.querySelectorAll("[data-dl-portable]").forEach((a) => {
-          a.href = portable.browser_download_url;
-        });
-        const sz = document.getElementById("portableSize");
-        if (sz && portable.size) sz.textContent = `${portable.name} • ${formatMiB(portable.size)}`;
-      }
+      applyReleaseData(rel);
+      try {
+        sessionStorage.setItem(REL_CACHE_KEY, JSON.stringify({ ts: Date.now(), rel }));
+      } catch (_) {}
     } catch (_) {
       // Static v7.5 URLs remain active on offline/rate-limited clients.
     } finally {
