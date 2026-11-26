@@ -8,6 +8,9 @@
 
 An offline, hardware-accelerated desktop application for batch format conversion, Photoshop `.psd` layer extraction, multi-page `.pdf` rasterization, local Vulkan NCNN AI super-resolution (`1x–8x`) with MangaJaNai & IllustrationJaNai auto-routing, multi-engine AI denoising, continuous strip/grid stitching, and multi-batch split-screen comparison — built on **FastAPI + React 19 + Tailwind CSS v4 + Edge WebView2**.
 
+![image](https://github.com/GuptaAman777/psd-converter/blob/main/tests/ss1.png)
+![image](https://github.com/GuptaAman777/psd-converter/blob/main/tests/ss2.png)
+
 ---
 
 ## What's New in v7.5
