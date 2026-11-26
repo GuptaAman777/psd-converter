@@ -1,0 +1,1044 @@
+:root {
+  --accent: #0a84ff;
+  --accent-hover: #3ea0ff;
+  --accent-soft: rgba(10, 132, 255, 0.22);
+  --accent-glow: rgba(10, 132, 255, 0.44);
+  --hero-start: #3ea0ff;
+  --hero-end: #0a84ff;
+  --bg-deep: #060a14;
+  --orb-1: rgba(10, 132, 255, 0.36);
+  --orb-2: rgba(94, 92, 230, 0.28);
+  --orb-3: rgba(56, 189, 248, 0.18);
+  --vignette-bg: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03), transparent 55%),
+    linear-gradient(180deg, rgba(6, 8, 16, 0.18) 0%, rgba(4, 6, 12, 0.55) 100%);
+  --dock-bg: linear-gradient(155deg, rgba(34, 41, 64, 0.66), rgba(14, 18, 30, 0.56));
+  --panel-bg: linear-gradient(165deg, rgba(28, 34, 54, 0.62), rgba(14, 17, 29, 0.52));
+  --card-bg: linear-gradient(160deg, rgba(255, 255, 255, 0.068), rgba(255, 255, 255, 0.024));
+  --pill-bg: rgba(255, 255, 255, 0.065);
+  --input-bg: rgba(8, 11, 20, 0.52);
+  --glass-border: rgba(255, 255, 255, 0.13);
+  --glass-specular: rgba(255, 255, 255, 0.24);
+  --text-primary: #f5f7fc;
+  --text-muted: rgba(235, 240, 255, 0.68);
+  --text-soft: rgba(235, 240, 255, 0.46);
+  --radius-panel: 24px;
+  --radius-card: 18px;
+  --page-max: 1220px;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: clip;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: clip;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  line-height: 1.55;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+select {
+  font-family: inherit;
+  color: inherit;
+}
+
+section,
+article,
+aside,
+header,
+footer {
+  min-width: 0;
+  max-width: 100%;
+}
+
+code {
+  overflow-wrap: anywhere;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* ── Desktop Liquid Backdrop Orbs ───────────────────────────────────────── */
+.liquid-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: var(--bg-deep);
+}
+
+.orb {
+  position: absolute;
+  border-radius: 999px;
+  will-change: transform;
+}
+
+.orb-1 {
+  top: -18%;
+  left: -12%;
+  width: 58vw;
+  height: 58vw;
+  filter: blur(110px);
+  background: radial-gradient(circle, var(--orb-1) 0%, transparent 70%);
+  animation: orbFloatA 18s ease-in-out infinite;
+}
+
+.orb-2 {
+  bottom: -24%;
+  right: -10%;
+  width: 54vw;
+  height: 54vw;
+  filter: blur(120px);
+  background: radial-gradient(circle, var(--orb-2) 0%, transparent 70%);
+  animation: orbFloatB 24s ease-in-out infinite;
+}
+
+.orb-3 {
+  top: 32%;
+  left: 38%;
+  width: 42vw;
+  height: 42vw;
+  filter: blur(110px);
+  background: radial-gradient(circle, var(--orb-3) 0%, transparent 72%);
+}
+
+.backdrop-vignette {
+  position: absolute;
+  inset: 0;
+  background: var(--vignette-bg);
+}
+
+@keyframes orbFloatA {
+  0%, 100% { transform: translate3d(0%, 0%, 0) scale(1); }
+  50% { transform: translate3d(6%, 4%, 0) scale(1.07); }
+}
+
+@keyframes orbFloatB {
+  0%, 100% { transform: translate3d(0%, 0%, 0) scale(1.04); }
+  50% { transform: translate3d(-7%, -5%, 0) scale(0.95); }
+}
+
+/* ── Layout Container ───────────────────────────────────────────────────── */
+.page-wrap {
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: clamp(12px, 2vw, 24px) clamp(12px, 3vw, 28px) clamp(48px, 6vw, 84px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(22px, 3.6vw, 44px);
+}
+
+/* ── Desktop Liquid Glass Surfaces ──────────────────────────────────────── */
+.liquid-dock {
+  position: sticky;
+  top: clamp(8px, 1.5vw, 16px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--dock-bg);
+  backdrop-filter: blur(42px) saturate(210%);
+  -webkit-backdrop-filter: blur(42px) saturate(210%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 var(--glass-specular),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    0 20px 50px rgba(0, 0, 0, 0.55);
+}
+
+.liquid-panel {
+  background: var(--panel-bg);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-panel);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 24px rgba(255, 255, 255, 0.02),
+    0 16px 42px rgba(0, 0, 0, 0.45);
+}
+
+.liquid-card {
+  position: relative;
+  min-width: 0;
+  background: var(--card-bg);
+  backdrop-filter: blur(22px) saturate(175%);
+  -webkit-backdrop-filter: blur(22px) saturate(175%);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: var(--radius-card);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 6px 20px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .liquid-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(280px circle at var(--mx, 50%) var(--my, 50%), rgba(255, 255, 255, 0.11), transparent 65%);
+    transition: opacity 0.26s ease;
+  }
+
+  .liquid-card:hover {
+    border-color: rgba(255, 255, 255, 0.24);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.24),
+      0 12px 30px rgba(0, 0, 0, 0.34);
+  }
+
+  .liquid-card:hover::before {
+    opacity: 1;
+  }
+}
+
+.liquid-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--pill-bg);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.liquid-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.28);
+  transform: translateY(-1px);
+}
+
+.liquid-pill-btn.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+.liquid-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 11px 22px;
+  border-radius: 999px;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--hero-start, var(--accent-hover)), var(--hero-end, var(--accent)));
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 10px 30px var(--accent-glow);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease,
+    filter 0.22s ease;
+}
+
+.liquid-hero-btn:hover {
+  transform: translateY(-1.5px) scale(1.01);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 14px 36px var(--accent-glow);
+  filter: brightness(1.06);
+}
+
+/* ── Dock Internals ─────────────────────────────────────────────────────── */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-left: 4px;
+}
+
+.brand-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.brand-title {
+  font-weight: 700;
+  font-size: 0.96rem;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.version-chip {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.dock-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.dock-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.dock-link {
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  transition: color 0.18s ease, background 0.18s ease;
+}
+
+.dock-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dock-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.theme-swatches {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.theme-dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.16s ease, border-color 0.16s ease;
+}
+
+.theme-dot.active {
+  transform: scale(1.22);
+  border-color: #ffffff;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* ── Hero Section ───────────────────────────────────────────────────────── */
+.hero {
+  padding: clamp(22px, 4vw, 44px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(20px, 3vw, 38px);
+  align-items: center;
+}
+
+.hero-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--accent-soft);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.6vw, 3.05rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+.gradient-text {
+  background: linear-gradient(125deg, #ffffff 15%, var(--accent-hover) 62%, #ffffff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-sub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: clamp(0.95rem, 1.35vw, 1.08rem);
+  max-width: 58ch;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.hero-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mobile-notice {
+  display: none;
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ── Interactive Studio Preview Card ────────────────────────────────────── */
+.studio-preview {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.window-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.win-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.win-dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: block;
+}
+
+.win-title {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.compare-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #090d18;
+  user-select: none;
+  touch-action: none;
+}
+
+.compare-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.compare-before {
+  clip-path: inset(0 calc(100% - var(--split, 52%)) 0 0);
+}
+
+.compare-divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--split, 52%);
+  width: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 12px var(--accent-glow);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.compare-knob {
+  position: absolute;
+  top: 50%;
+  left: var(--split, 52%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--accent);
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #ffffff;
+  cursor: ew-resize;
+}
+
+.compare-badge {
+  position: absolute;
+  bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(6, 10, 20, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+}
+
+.compare-badge.left { left: 10px; }
+.compare-badge.right { right: 10px; border-color: var(--accent); }
+
+.compare-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.compare-range {
+  flex: 1 1 160px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.mini-presets {
+  display: flex;
+  gap: 6px;
+}
+
+.mini-btn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+}
+
+.mini-btn:hover {
+  border-color: var(--accent);
+}
+
+/* ── Section Headings ───────────────────────────────────────────────────── */
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.4vw, 1.85rem);
+  letter-spacing: -0.025em;
+}
+
+.section-head p {
+  margin: 4px 0 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+/* ── Workspace Tabs Showcase ────────────────────────────────────────────── */
+.tab-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.tab-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-btn {
+  scroll-snap-align: start;
+}
+
+.workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.workspace-detail {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.workspace-detail h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: -0.015em;
+}
+
+.feature-bullets {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.feature-bullets li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.bullet-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-top: 8px;
+  flex-shrink: 0;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.shortcut-pill {
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--text-primary);
+}
+
+/* ── JaNai Auto Router Interactive Lab ──────────────────────────────────── */
+.router-sim {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sim-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.field label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.liquid-select {
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: var(--input-bg);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 0.84rem;
+}
+
+.sim-output {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mono-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.79rem;
+  color: var(--accent-hover);
+  word-break: break-word;
+}
+
+/* ── Highlight & Matrix Cards ───────────────────────────────────────────── */
+.cards-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.cards-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.info-card {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-tag {
+  align-self: flex-start;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.71rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--accent-soft);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.info-card h3 {
+  margin: 2px 0 0;
+  font-size: 1.03rem;
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 0.87rem;
+  color: var(--text-muted);
+}
+
+/* ── Responsive Engine Table / Stack ────────────────────────────────────── */
+.matrix-panel {
+  padding: 18px;
+  overflow-x: auto;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.87rem;
+  min-width: 640px;
+}
+
+.matrix-table th,
+.matrix-table td {
+  text-align: left;
+  padding: 11px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  vertical-align: top;
+}
+
+.matrix-table th {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-soft);
+}
+
+.mobile-engine-cards {
+  display: none;
+  gap: 10px;
+}
+
+/* ── Download Cards & Changelog ─────────────────────────────────────────── */
+.download-panel {
+  padding: clamp(18px, 3vw, 28px);
+}
+
+.dl-card {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.dl-size {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+
+.footer {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.footer-links a:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE / TOUCH / SMALL-WIDTH LIGHTWEIGHT MODE (Easy to Run & Dynamic Width)
+   Activated on viewports <= 768px or touch-first mobile devices.
+   - Replaces heavy backdrop blur + animated orbs with fast crisp dark layers.
+   - Prevents horizontal overflow down to 320px width.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 980px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cards-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px), (max-width: 900px) and (hover: none) and (pointer: coarse) {
+  .orb-1,
+  .orb-2,
+  .orb-3 {
+    display: none;
+  }
+
+  .liquid-backdrop {
+    background:
+      radial-gradient(circle at 50% -10%, var(--accent-soft), transparent 58%),
+      var(--bg-deep);
+  }
+
+  .liquid-dock,
+  .liquid-panel,
+  .liquid-card,
+  .liquid-pill-btn {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .liquid-dock {
+    position: relative;
+    top: 0;
+    border-radius: 18px;
+    background: rgba(13, 17, 29, 0.96);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.42);
+    flex-wrap: wrap;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .liquid-panel {
+    background: rgba(14, 18, 30, 0.94);
+    border-radius: 18px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.36);
+  }
+
+  .liquid-card {
+    background: rgba(20, 25, 40, 0.92);
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+
+  .liquid-pill-btn:hover,
+  .liquid-hero-btn:hover {
+    transform: none;
+    filter: none;
+  }
+
+  .mobile-notice {
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+  .dock-nav {
+    order: 3;
+    width: 100%;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .hero {
+    padding: 16px;
+    gap: 18px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .hero-actions .liquid-hero-btn,
+  .hero-actions .liquid-pill-btn {
+    width: 100%;
+  }
+
+  .sim-controls,
+  .cards-3,
+  .cards-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .matrix-desktop {
+    display: none;
+  }
+
+  .mobile-engine-cards {
+    display: grid;
+  }
+
+  .theme-swatches {
+    gap: 5px;
+  }
+
+  .dock-right .desktop-only-btn {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-title {
+    font-size: 0.86rem;
+  }
+
+  .theme-swatches {
+    gap: 4px;
+    padding: 4px 6px;
+  }
+
+  .theme-dot {
+    width: 12px;
+    height: 12px;
+  }
+
+  .liquid-hero-btn,
+  .liquid-pill-btn {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .page-wrap {
+    padding: 10px 10px 40px;
+    gap: 16px;
+  }
+
+  .compare-knob {
+    width: 30px;
+    height: 30px;
+    font-size: 0.72rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-1,
+  .orb-2 {
+    animation: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}

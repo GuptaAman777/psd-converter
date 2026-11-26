@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>ImageTool v7.5 — PSD, Manga &amp; AI Image Suite</title>
+  <meta name="description" content="Offline hardware-accelerated desktop suite for batch image conversion, Photoshop PSD layer extraction, PDF rasterization, Vulkan NCNN &amp; MangaJaNai AI upscaling, denoising, stitching, and visual comparison." />
+  <meta name="theme-color" content="#060a14" />
+  <link rel="icon" href="./favicon.ico" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="liquid-backdrop" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="backdrop-vignette"></div>
+  </div>
+
+  <div class="page-wrap">
+    <!-- Floating Glass Navigation Dock -->
+    <header class="liquid-dock">
+      <a href="#top" class="brand" id="top">
+        <img src="./favicon.ico" alt="ImageTool icon" class="brand-icon" />
+        <span class="brand-title">ImageTool</span>
+        <span class="version-chip" id="releaseBadge">v7.5</span>
+      </a>
+
+      <nav class="dock-nav" aria-label="Primary sections">
+        <a href="#workspaces" class="dock-link">Workspaces</a>
+        <a href="#janai" class="dock-link">JaNai AI</a>
+        <a href="#engines" class="dock-link">AI Matrix</a>
+        <a href="#download" class="dock-link">Download</a>
+      </nav>
+
+      <div class="dock-right">
+        <div class="theme-swatches" role="group" aria-label="Preview color theme">
+          <button type="button" class="theme-dot active" data-theme="blue" style="background:#0a84ff" title="Blue (Default)" aria-label="Blue theme"></button>
+          <button type="button" class="theme-dot" data-theme="crimson" style="background:#ff375f" title="Red (Crimson)" aria-label="Crimson theme"></button>
+          <button type="button" class="theme-dot" data-theme="oled" style="background:#18181c" title="Black (OLED Dark)" aria-label="OLED Black theme"></button>
+          <button type="button" class="theme-dot" data-theme="purple" style="background:#bf5af2" title="Purple (Cyberpunk)" aria-label="Purple theme"></button>
+          <button type="button" class="theme-dot" data-theme="emerald" style="background:#30d158" title="Green (Emerald)" aria-label="Emerald theme"></button>
+          <button type="button" class="theme-dot" data-theme="amber" style="background:#ff9f0a" title="Amber (Sunset)" aria-label="Amber theme"></button>
+        </div>
+        <a href="https://github.com/GuptaAman777/psd-converter" target="_blank" rel="noopener noreferrer" class="liquid-pill-btn desktop-only-btn">
+          GitHub
+        </a>
+      </div>
+    </header>
+
+    <!-- Hero Panel -->
+    <section class="liquid-panel hero">
+      <div class="hero-copy">
+        <div class="eyebrow" id="heroEyebrow">v7.5 Latest Release • Windows 10 / 11 (x64)</div>
+        <h1>
+          Offline PSD, PDF &amp; <span class="gradient-text">Vulkan AI</span> Studio
+        </h1>
+        <p class="hero-sub">
+          Batch-convert images, extract Photoshop <code>.psd</code> layers, rasterize <code>.pdf</code> pages, upscale manga &amp; illustrations with 22 MangaJaNai NCNN models, stitch webtoon strips, and inspect every pixel before/after.
+        </p>
+
+        <div class="hero-actions">
+          <a data-dl-setup href="https://github.com/GuptaAman777/psd-converter/releases/download/7.5/ImageTool-v7.5-Setup.exe" class="liquid-hero-btn">
+            Download Setup Installer (.exe)
+          </a>
+          <a data-dl-portable href="https://github.com/GuptaAman777/psd-converter/releases/download/7.5/ImageTool-v7.5-Portable-win64.zip" class="liquid-pill-btn">
+            Portable (.zip)
+          </a>
+          <a href="https://github.com/GuptaAman777/psd-converter/releases/tag/7.5" target="_blank" rel="noopener noreferrer" class="liquid-pill-btn">
+            Release Notes
+          </a>
+        </div>
+
+        <div class="hero-meta">
+          <span>FastAPI + React 19 + Edge WebView2</span>
+          <span>•</span>
+          <span>Vulkan Multi-GPU + CPU Fallback</span>
+          <span>•</span>
+          <span>MIT Open Source</span>
+        </div>
+
+        <div class="mobile-notice">
+          Mobile Lite View active — blur effects disabled for smooth scrolling on phones. Download runs on Windows 10/11 (x64) PCs.
+        </div>
+      </div>
+
+      <!-- Interactive Liquid Compare Preview Window -->
+      <div class="liquid-card studio-preview" aria-label="Interactive comparison preview">
+        <div class="window-bar">
+          <div class="win-dots" aria-hidden="true">
+            <i style="background:#ff5f57"></i>
+            <i style="background:#febc2e"></i>
+            <i style="background:#28c840"></i>
+          </div>
+          <span class="win-title">Before / After Split Inspector • JaNai 4x</span>
+        </div>
+
+        <div class="compare-stage" id="compareStage" style="--split: 52%;">
+          <!-- Clean Upscaled Vector Side (Right / Background) -->
+          <svg class="compare-layer" viewBox="0 0 640 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <linearGradient id="skyUp" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#102247" />
+                <stop offset="55%" stop-color="#1a3d7c" />
+                <stop offset="100%" stop-color="#0b1328" />
+              </linearGradient>
+              <radialGradient id="sunUp" cx="72%" cy="32%" r="36%">
+                <stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.95" />
+                <stop offset="55%" stop-color="#38bdf8" stop-opacity="0.35" />
+                <stop offset="100%" stop-color="#38bdf8" stop-opacity="0" />
+              </radialGradient>
+            </defs>
+            <rect width="640" height="400" fill="url(#skyUp)" />
+            <rect width="640" height="400" fill="url(#sunUp)" />
+            <circle cx="460" cy="128" r="56" fill="#e0f2fe" />
+            <path d="M0 290 L125 185 L235 255 L365 145 L515 245 L640 190 L640 400 L0 400 Z" fill="#0d1b3a" stroke="#60a5fa" stroke-width="2.5" />
+            <path d="M0 325 L190 250 L310 305 L470 215 L640 295 L640 400 L0 400 Z" fill="#070e21" stroke="#93c5fd" stroke-width="1.8" opacity="0.92" />
+            <path d="M120 110 C190 78 270 96 318 148" fill="none" stroke="#f0f9ff" stroke-width="3" stroke-linecap="round" opacity="0.82" />
+          </svg>
+
+          <!-- Blocky / Compressed Original Side (Left / Clipped) -->
+          <svg class="compare-layer compare-before" viewBox="0 0 640 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <pattern id="jpegBlocks" width="20" height="20" patternUnits="userSpaceOnUse">
+                <rect width="20" height="20" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
+              </pattern>
+            </defs>
+            <rect width="640" height="400" fill="#131f3b" />
+            <circle cx="460" cy="128" r="56" fill="#cbd5e1" opacity="0.72" />
+            <path d="M0 296 L64 240 L128 192 L180 228 L236 260 L300 204 L365 150 L440 202 L515 248 L640 196 L640 400 L0 400 Z" fill="#0b142b" stroke="#475569" stroke-width="5" stroke-linejoin="bevel" opacity="0.88" />
+            <path d="M0 328 L190 256 L310 310 L470 222 L640 300 L640 400 L0 400 Z" fill="#060b18" />
+            <rect width="640" height="400" fill="url(#jpegBlocks)" />
+          </svg>
+
+          <div class="compare-divider"></div>
+          <div class="compare-knob" aria-hidden="true">⇄</div>
+          <span class="compare-badge left">Original 1x + JPEG</span>
+          <span class="compare-badge right">JaNai V3 + Detail 4x</span>
+        </div>
+
+        <div class="compare-controls">
+          <input type="range" id="compareRange" class="compare-range" min="4" max="96" value="52" aria-label="Before and after split position" />
+          <div class="mini-presets">
+            <button type="button" class="mini-btn" data-split-preset="25">25%</button>
+            <button type="button" class="mini-btn" data-split-preset="50">50%</button>
+            <button type="button" class="mini-btn" data-split-preset="75">75%</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Workspace Tour + MangaJaNai Auto Router Simulator -->
+    <section id="workspaces" class="liquid-panel" style="padding: clamp(16px, 3vw, 28px);">
+      <div class="section-head">
+        <div>
+          <h2>6 Focused Workspaces</h2>
+          <p>Switch tabs with keyboard shortcuts or drag folders directly into any queue.</p>
+        </div>
+      </div>
+
+      <div class="tab-strip" role="tablist" aria-label="Application workspaces">
+        <button type="button" class="liquid-pill-btn tab-btn active" data-ws="janai" role="tab">JaNai AI (Ctrl+4)</button>
+        <button type="button" class="liquid-pill-btn tab-btn" data-ws="converter" role="tab">Converter &amp; PSD (Ctrl+1)</button>
+        <button type="button" class="liquid-pill-btn tab-btn" data-ws="upscaler" role="tab">Upscaler (Ctrl+2)</button>
+        <button type="button" class="liquid-pill-btn tab-btn" data-ws="denoiser" role="tab">Denoiser (Ctrl+3)</button>
+        <button type="button" class="liquid-pill-btn tab-btn" data-ws="stitcher" role="tab">Stitcher (Ctrl+5)</button>
+        <button type="button" class="liquid-pill-btn tab-btn" data-ws="compare" role="tab">Compare &amp; Settings (Ctrl+6)</button>
+      </div>
+
+      <div class="workspace-grid">
+        <article class="liquid-card workspace-detail">
+          <span class="shortcut-pill" id="wsShortcut">Shortcut: Ctrl + 4</span>
+          <h3 id="wsTitle">JaNai AI (Manga &amp; Illustration)</h3>
+          <p id="wsSummary" style="margin:0;color:var(--text-muted);font-size:0.93rem;"></p>
+          <ul class="feature-bullets" id="wsBullets"></ul>
+        </article>
+
+        <!-- Interactive MangaJaNai Auto Detect Simulator -->
+        <aside id="janai" class="liquid-card router-sim">
+          <span class="card-tag">Interactive Simulator</span>
+          <h3 style="margin:0;">MangaJaNai Auto Detect Router</h3>
+          <p style="margin:0;font-size:0.84rem;color:var(--text-muted);">
+            Test how v7.5 inspects each file's chroma variance, height tier, and compression format to choose a model automatically.
+          </p>
+
+          <div class="sim-controls">
+            <div class="field">
+              <label for="simType">Input Artwork</label>
+              <select id="simType" class="liquid-select">
+                <option value="bw:1180">B&amp;W Manga Scan (~1180px)</option>
+                <option value="bw:1420" selected>B&amp;W Manga Scan (~1420px)</option>
+                <option value="bw:1890">B&amp;W Manga Scan (~1890px)</option>
+                <option value="bw:2048">B&amp;W Manga Scan (2048px+)</option>
+                <option value="color:1400">Color Illustration / Cover</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="simScale">Target Scale</label>
+              <select id="simScale" class="liquid-select">
+                <option value="2x" selected>2x Scale</option>
+                <option value="4x">4x Scale</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="simFormat">Source Compression</label>
+              <select id="simFormat" class="liquid-select">
+                <option value="png">Lossless PNG / PSD</option>
+                <option value="jpg" selected>Compressed JPEG</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="simTier">Color Artwork Tier</label>
+              <select id="simTier" class="liquid-select">
+                <option value="span">SPAN-S (Ultra Fast 0.8 MB)</option>
+                <option value="fdat_m" selected>FDAT-M (Balanced 8.1 MB)</option>
+                <option value="fdat_xl">FDAT-XL (Flagship 45.6 MB, 4x)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="sim-output" aria-live="polite">
+            <span style="font-size:0.74rem;color:var(--text-soft);font-weight:700;">Selected NCNN Model</span>
+            <code class="mono-code" id="simModel">2x_MangaJaNai_1400p_V1_ESRGAN_70k_fp16</code>
+            <span id="simReason" style="font-size:0.8rem;color:var(--text-muted);"></span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- What's New in v7.5 -->
+    <section>
+      <div class="section-head">
+        <div>
+          <h2>What's New in v7.5</h2>
+          <p>Smaller downloads, smarter routing, multi-batch visual comparison, and smoother progress telemetry.</p>
+        </div>
+      </div>
+
+      <div class="cards-3">
+        <article class="liquid-card info-card">
+          <span class="card-tag">22 On-Demand Packs</span>
+          <h3>GitHub-Hosted JaNai Weights</h3>
+          <p>Removed ~573 MB of static weights from the installer. Download only the SPAN, FDAT, or ESRGAN models you need directly inside the app.</p>
+        </article>
+
+        <article class="liquid-card info-card">
+          <span class="card-tag">Queue Routing Modal</span>
+          <h3>Per-File Pass Inspection</h3>
+          <p>Click any queued file to inspect detected color/grayscale classification, height tier snapping, and 2-pass chained workflows before converting.</p>
+        </article>
+
+        <article class="liquid-card info-card">
+          <span class="card-tag">Multi-Batch Compare</span>
+          <h3>Retained History &amp; Cleanup</h3>
+          <p>Keep Before/After sets across multiple runs with a batch switcher, cache-busted previews, and automatic deleted-file removal.</p>
+        </article>
+
+        <article class="liquid-card info-card">
+          <span class="card-tag">Smoothed ETA</span>
+          <h3>Fractional Telemetry</h3>
+          <p>Weighted fractional EMA ETA tracker eliminates sudden tile jumps across Converter, Upscaler, Denoiser, and JaNai batches.</p>
+        </article>
+
+        <article class="liquid-card info-card">
+          <span class="card-tag">HUD Toggle</span>
+          <h3>Translucent or Opaque Progress</h3>
+          <p>Prefer higher contrast over busy wallpapers? Switch the floating draggable Progress HUD between translucent and opaque styles in Settings.</p>
+        </article>
+
+        <article class="liquid-card info-card">
+          <span class="card-tag">16-Bit &amp; Alpha Safe</span>
+          <h3>Clean Tile Alignment</h3>
+          <p>Reflect-padded block alignment, overlap tile blending, EXIF auto-orientation, alpha preservation, and automatic FP16-to-FP32 GPU fallback.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Comprehensive AI Model Matrix -->
+    <section id="engines" class="liquid-panel matrix-panel">
+      <div class="section-head">
+        <div>
+          <h2>Comprehensive AI Engine Matrix</h2>
+          <p>Bundled native Vulkan engines plus optional on-demand NCNN model packs.</p>
+        </div>
+      </div>
+
+      <table class="matrix-table matrix-desktop">
+        <thead>
+          <tr>
+            <th>Engine</th>
+            <th>Models / Families</th>
+            <th>Scale Factors</th>
+            <th>Noise / Controls</th>
+            <th>Best For</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>JaNai NCNN</strong></td>
+            <td>22 downloadable MangaJaNai &amp; IllustrationJaNai packs (<code>SPAN</code>, <code>FDAT</code>, <code>ESRGAN</code>)</td>
+            <td><code>2x</code>, <code>4x</code>, or 2-pass chained</td>
+            <td>Auto-routed detail/denoise, Tile overlap, FP16/FP32</td>
+            <td>Manga pages, screentones, digital illustrations, CGs</td>
+          </tr>
+          <tr>
+            <td><strong>Upscayl / Real-ESRGAN</strong></td>
+            <td><code>realesr-animevideov3</code>, <code>realesrgan-x4plus</code>, <code>realesrnet-x4plus</code>, <code>esrgan-x4</code> + 11 packs</td>
+            <td><code>2x</code>, <code>3x</code>, <code>4x</code>, <code>8x</code></td>
+            <td>SSAA post-resize, custom NCNN downloads</td>
+            <td>Photography, anime stills, paintings, UltraSharp/Remacri</td>
+          </tr>
+          <tr>
+            <td><strong>Real-CUGAN</strong></td>
+            <td><code>models-se</code>, <code>models-pro</code>, <code>models-nose</code></td>
+            <td><code>2x</code>, <code>3x</code>, <code>4x</code>, <code>8x</code></td>
+            <td>Noise <code>-1</code>..<code>3</code>, SyncGap (<code>-c</code>)</td>
+            <td>Clean line art and cel-shaded artwork without tile seams</td>
+          </tr>
+          <tr>
+            <td><strong>Waifu2x (20250915)</strong></td>
+            <td><code>models-cunet</code>, <code>upconv_7_anime</code>, <code>upconv_7_photo</code></td>
+            <td><code>1x</code>, <code>2x</code>, <code>4x</code>, <code>8x</code></td>
+            <td>Noise <code>-1</code>..<code>3</code>, Grain Preserve</td>
+            <td>Classic <code>1x</code> denoising &amp; fast illustration/photo upscaling</td>
+          </tr>
+          <tr>
+            <td><strong>SRMD</strong></td>
+            <td><code>models-srmd</code></td>
+            <td><code>2x</code>, <code>3x</code>, <code>4x</code>, <code>8x</code></td>
+            <td>Noise <code>-1</code> to <code>10</code></td>
+            <td>Noisy camera captures, vintage scans, high-ISO photos</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Dynamically Shown Mobile Card Matrix -->
+      <div class="mobile-engine-cards">
+        <article class="liquid-card info-card">
+          <span class="card-tag">2x / 4x / Chained</span>
+          <h3>JaNai NCNN</h3>
+          <p>22 on-demand MangaJaNai &amp; IllustrationJaNai models (<code>SPAN</code>, <code>FDAT</code>, <code>ESRGAN</code>) with grayscale/color auto-routing.</p>
+        </article>
+        <article class="liquid-card info-card">
+          <span class="card-tag">2x – 8x • +11 Packs</span>
+          <h3>Upscayl / Real-ESRGAN</h3>
+          <p>Built-in AnimeVideoV3 &amp; RealESRGAN+ plus <code>4x-UltraSharp</code>, <code>4x-Remacri</code>, <code>Digital Art 4x</code>, and <code>SSAA</code> resize.</p>
+        </article>
+        <article class="liquid-card info-card">
+          <span class="card-tag">2x – 8x • SyncGap</span>
+          <h3>Real-CUGAN</h3>
+          <p><code>models-se</code>, <code>models-pro</code>, and <code>models-nose</code> with noise <code>-1..3</code> and seam sync.</p>
+        </article>
+        <article class="liquid-card info-card">
+          <span class="card-tag">1x – 8x • Denoise</span>
+          <h3>Waifu2x 2025 &amp; SRMD</h3>
+          <p><code>1x</code> compression cleanup with Grain Preserve blending and SRMD noise levels <code>-1..10</code>.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Downloads Section -->
+    <section id="download" class="liquid-panel download-panel">
+      <div class="section-head">
+        <div>
+          <h2>Download ImageTool for Windows</h2>
+          <p>Choose either the standard Setup Installer or self-contained Portable archive.</p>
+        </div>
+      </div>
+
+      <div class="cards-2">
+        <article class="liquid-card dl-card">
+          <div>
+            <span class="card-tag">Recommended</span>
+            <h3 style="margin:8px 0 6px;">Windows Setup Installer (.exe)</h3>
+            <p style="margin:0;color:var(--text-muted);font-size:0.88rem;">
+              Installs shortcuts and automatically keeps <code>settings.json</code> and downloaded AI model packs safely in <code>%LOCALAPPDATA%\ImageTool</code>.
+            </p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <span class="dl-size" id="setupSize">ImageTool-v7.5-Setup.exe • ~299.8 MB</span>
+            <a data-dl-setup href="https://github.com/GuptaAman777/psd-converter/releases/download/7.5/ImageTool-v7.5-Setup.exe" class="liquid-hero-btn">
+              Download Setup Installer
+            </a>
+          </div>
+        </article>
+
+        <article class="liquid-card dl-card">
+          <div>
+            <span class="card-tag">No Admin Required</span>
+            <h3 style="margin:8px 0 6px;">Portable Windows x64 (.zip)</h3>
+            <p style="margin:0;color:var(--text-muted);font-size:0.88rem;">
+              Extract anywhere and run <code>ImageTool\ImageTool.exe</code>. User preferences and downloaded models stay portable beside the executable.
+            </p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <span class="dl-size" id="portableSize">ImageTool-v7.5-Portable-win64.zip • ~329.8 MB</span>
+            <a data-dl-portable href="https://github.com/GuptaAman777/psd-converter/releases/download/7.5/ImageTool-v7.5-Portable-win64.zip" class="liquid-pill-btn" style="min-height:46px;">
+              Download Portable (.zip)
+            </a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="liquid-panel footer">
+      <span>Built by <strong>@GuptaAman777</strong> • MIT License</span>
+      <div class="footer-links">
+        <a href="https://github.com/GuptaAman777/psd-converter" target="_blank" rel="noopener noreferrer">Source Code</a>
+        <a href="https://github.com/GuptaAman777/psd-converter/releases" target="_blank" rel="noopener noreferrer">All Releases</a>
+        <a href="https://github.com/GuptaAman777/mangajanai-illustrationjanai-ncnn-vulkan/releases/tag/v1.0.0" target="_blank" rel="noopener noreferrer">JaNai Model Packs</a>
+        <a href="https://guptaaman777.me/" target="_blank" rel="noopener noreferrer">guptaaman777.me</a>
+      </div>
+    </footer>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
