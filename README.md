@@ -1,4 +1,4 @@
-# ImageTool v7.5 — PSD & AI Image Suite
+# ImageTool v7.5 — PSD & AI Upscaler and Denoiser 
 
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue.svg)](https://www.python.org/)
 [![UI Stack](https://img.shields.io/badge/UI-React%2019%20%2B%20FastAPI%20%2B%20WebView2-0a84ff.svg)](https://github.com/GuptaAman777/psd-converter)
