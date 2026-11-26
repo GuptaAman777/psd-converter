@@ -95,27 +95,29 @@
           <span class="win-title">Before / After Split Inspector • MangaJaNai</span>
         </div>
 
-        <div class="compare-stage" id="compareStage" style="--split: 52%;">
-          <img
-            src="./compare-after.webp"
-            alt="MangaJaNai upscaled manga screentone restoration"
-            width="720"
-            height="648"
-            decoding="async"
-            fetchpriority="high"
-            class="compare-layer compare-img"
-            draggable="false"
-          />
-          <img
-            src="./compare-before.webp"
-            alt="Original compressed manga scan before upscaling"
-            width="720"
-            height="648"
-            decoding="async"
-            fetchpriority="high"
-            class="compare-layer compare-img compare-before"
-            draggable="false"
-          />
+        <div class="compare-stage" id="compareStage" style="--split: 52%; --img-split: 52%;">
+          <div class="compare-canvas" id="compareCanvas">
+            <img
+              src="./compare-after.webp"
+              alt="MangaJaNai upscaled manga screentone restoration"
+              width="720"
+              height="648"
+              decoding="async"
+              fetchpriority="high"
+              class="compare-layer compare-img"
+              draggable="false"
+            />
+            <img
+              src="./compare-before.webp"
+              alt="Original compressed manga scan before upscaling"
+              width="720"
+              height="648"
+              decoding="async"
+              fetchpriority="high"
+              class="compare-layer compare-img compare-before"
+              draggable="false"
+            />
+          </div>
 
           <div class="compare-divider"></div>
           <div class="compare-knob" id="compareKnob" aria-hidden="true">⇄</div>
@@ -130,7 +132,13 @@
             <button type="button" class="mini-btn" data-split-preset="50">50%</button>
             <button type="button" class="mini-btn" data-split-preset="75">75%</button>
           </div>
+          <div class="zoom-group" role="group" aria-label="Comparison zoom controls">
+            <button type="button" class="mini-btn" id="compareZoomOut" aria-label="Zoom out">−</button>
+            <button type="button" class="mini-btn zoom-readout" id="compareZoomReset" title="Reset zoom to 1x">1.0x</button>
+            <button type="button" class="mini-btn" id="compareZoomIn" aria-label="Zoom in">+</button>
+          </div>
         </div>
+        <p class="compare-hint">Scroll on PC or pinch with two fingers on mobile to zoom (1x–6x) • Drag to pan when zoomed</p>
       </div>
     </section>
 

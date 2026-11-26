@@ -222,94 +222,295 @@
     });
   }
 
-  // Interactive Compare Slider (rAF throttled, scroll-safe on touch devices)
+  // Interactive Compare Slider + Cursor Wheel / Two-Finger Pinch Zoom & Pan
   const stage = document.getElementById("compareStage");
+  const canvas = document.getElementById("compareCanvas");
   const knob = document.getElementById("compareKnob");
   const range = document.getElementById("compareRange");
-  let pendingPct = 52;
-  let rafId = 0;
+  const zoomInBtn = document.getElementById("compareZoomIn");
+  const zoomOutBtn = document.getElementById("compareZoomOut");
+  const zoomResetBtn = document.getElementById("compareZoomReset");
 
-  function applySplitNow(pct, animated = false) {
-    const clamped = Math.max(4, Math.min(96, Number(pct) || 50));
-    pendingPct = clamped;
-    if (!stage) return;
-    stage.classList.toggle("is-animated", Boolean(animated));
-    stage.style.setProperty("--split", `${clamped}%`);
-    if (range) range.value = String(Math.round(clamped));
+  let splitPct = 52;
+  let zoom = 1;
+  let panX = 0;
+  let panY = 0;
+  let rafId = 0;
+  let pendingAnimated = false;
+
+  const MIN_ZOOM = 1;
+  const MAX_ZOOM = 6;
+
+  function clamp(v, lo, hi) {
+    return Math.max(lo, Math.min(hi, v));
   }
 
-  function scheduleSplit(pct) {
-    pendingPct = Math.max(4, Math.min(96, Number(pct) || 50));
+  function clampState() {
+    zoom = clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+    if (!stage || zoom <= 1.001) {
+      zoom = 1;
+      panX = 0;
+      panY = 0;
+      return;
+    }
+    const w = stage.clientWidth || 1;
+    const h = stage.clientHeight || 1;
+    panX = clamp(panX, w * (1 - zoom), 0);
+    panY = clamp(panY, h * (1 - zoom), 0);
+  }
+
+  function renderCompareNow(animated = false) {
+    if (!stage) return;
+    clampState();
+    const w = stage.clientWidth || 1;
+    const splitFrac = splitPct / 100;
+    const imgSplitPct = clamp(((splitFrac * w - panX) / (zoom * w)) * 100, -5, 105);
+
+    stage.classList.toggle("is-animated", Boolean(animated) && zoom === 1);
+    stage.classList.toggle("is-zoomed", zoom > 1.01);
+    stage.style.setProperty("--split", `${splitPct}%`);
+    stage.style.setProperty("--img-split", `${imgSplitPct}%`);
+
+    if (canvas) {
+      canvas.style.transform = zoom === 1
+        ? "translate3d(0px, 0px, 0) scale(1)"
+        : `translate3d(${panX.toFixed(2)}px, ${panY.toFixed(2)}px, 0) scale(${zoom.toFixed(4)})`;
+    }
+    if (range) range.value = String(Math.round(splitPct));
+    if (zoomResetBtn) zoomResetBtn.textContent = `${zoom.toFixed(1)}x`;
+  }
+
+  function scheduleRender(animated = false) {
+    pendingAnimated = pendingAnimated || animated;
     if (rafId) return;
     rafId = requestAnimationFrame(() => {
       rafId = 0;
-      applySplitNow(pendingPct, false);
+      const anim = pendingAnimated;
+      pendingAnimated = false;
+      renderCompareNow(anim);
     });
   }
 
+  function setSplit(pct, animated = false) {
+    splitPct = clamp(Number(pct) || 50, 4, 96);
+    if (animated) {
+      renderCompareNow(true);
+    } else {
+      scheduleRender(false);
+    }
+  }
+
+  function zoomAt(nextZoom, clientX, clientY) {
+    if (!stage) return;
+    const rect = stage.getBoundingClientRect();
+    const ax = rect.width > 0 ? clamp(clientX - rect.left, 0, rect.width) : rect.width / 2;
+    const ay = rect.height > 0 ? clamp(clientY - rect.top, 0, rect.height) : rect.height / 2;
+    const clampedNext = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
+    if (clampedNext <= 1.01) {
+      zoom = 1;
+      panX = 0;
+      panY = 0;
+    } else {
+      const worldX = (ax - panX) / zoom;
+      const worldY = (ay - panY) / zoom;
+      zoom = clampedNext;
+      panX = ax - worldX * zoom;
+      panY = ay - worldY * zoom;
+    }
+    scheduleRender(false);
+  }
+
   if (range) {
-    range.addEventListener("input", () => scheduleSplit(range.value));
+    range.addEventListener("input", () => setSplit(range.value, false));
   }
   if (stage) {
-    let dragging = false;
+    let draggingSplit = false;
+    let draggingPan = false;
+    let panStartX = 0;
+    let panStartY = 0;
+    let panOriginX = 0;
+    let panOriginY = 0;
     let startX = 0;
     let startY = 0;
     let lockedAxis = false;
 
-    const updateFromClientX = (clientX) => {
+    const updateSplitFromClientX = (clientX) => {
       const rect = stage.getBoundingClientRect();
       if (rect.width <= 0) return;
-      scheduleSplit(((clientX - rect.left) / rect.width) * 100);
+      setSplit(((clientX - rect.left) / rect.width) * 100, false);
     };
 
     if (knob) {
       knob.addEventListener("pointerdown", (e) => {
-        dragging = true;
+        e.stopPropagation();
+        draggingSplit = true;
+        draggingPan = false;
         lockedAxis = true;
         knob.setPointerCapture(e.pointerId);
-        updateFromClientX(e.clientX);
+        updateSplitFromClientX(e.clientX);
       });
       knob.addEventListener("pointermove", (e) => {
-        if (dragging) updateFromClientX(e.clientX);
+        if (draggingSplit) updateSplitFromClientX(e.clientX);
       });
-      knob.addEventListener("pointerup", () => { dragging = false; });
-      knob.addEventListener("pointercancel", () => { dragging = false; });
+      knob.addEventListener("pointerup", () => { draggingSplit = false; });
+      knob.addEventListener("pointercancel", () => { draggingSplit = false; });
     }
 
+    // Mouse wheel zoom anchored at cursor (lets page scroll normally if at 1x scrolling down)
+    stage.addEventListener("wheel", (e) => {
+      if (zoom <= 1.001 && e.deltaY > 0) return;
+      e.preventDefault();
+      const factor = Math.exp(-e.deltaY * 0.0018);
+      zoomAt(zoom * factor, e.clientX, e.clientY);
+    }, { passive: false });
+
+    // Two-finger pinch-zoom + two-finger pan for touchscreens
+    let pinchActive = false;
+    let pinchDist0 = 1;
+    let pinchZoom0 = 1;
+    let pinchWorldX = 0;
+    let pinchWorldY = 0;
+
+    function touchMetrics(t1, t2) {
+      const dx = t2.clientX - t1.clientX;
+      const dy = t2.clientY - t1.clientY;
+      return {
+        dist: Math.hypot(dx, dy) || 1,
+        midX: (t1.clientX + t2.clientX) * 0.5,
+        midY: (t1.clientY + t2.clientY) * 0.5,
+      };
+    }
+
+    stage.addEventListener("touchstart", (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        draggingSplit = false;
+        draggingPan = false;
+        pinchActive = true;
+        const rect = stage.getBoundingClientRect();
+        const m = touchMetrics(e.touches[0], e.touches[1]);
+        pinchDist0 = m.dist;
+        pinchZoom0 = zoom;
+        pinchWorldX = (m.midX - rect.left - panX) / zoom;
+        pinchWorldY = (m.midY - rect.top - panY) / zoom;
+      }
+    }, { passive: false });
+
+    stage.addEventListener("touchmove", (e) => {
+      if (!pinchActive || e.touches.length !== 2) return;
+      e.preventDefault();
+      const rect = stage.getBoundingClientRect();
+      const m = touchMetrics(e.touches[0], e.touches[1]);
+      const nextZoom = clamp(pinchZoom0 * (m.dist / pinchDist0), MIN_ZOOM, MAX_ZOOM);
+      zoom = nextZoom <= 1.02 ? 1 : nextZoom;
+      if (zoom === 1) {
+        panX = 0;
+        panY = 0;
+      } else {
+        panX = (m.midX - rect.left) - pinchWorldX * zoom;
+        panY = (m.midY - rect.top) - pinchWorldY * zoom;
+      }
+      scheduleRender(false);
+    }, { passive: false });
+
+    stage.addEventListener("touchend", (e) => {
+      if (e.touches.length < 2) pinchActive = false;
+    });
+
+    // Single-pointer pan (when zoomed > 1x) or split-drag (when 1x)
     stage.addEventListener("pointerdown", (e) => {
-      if (e.target === knob) return;
+      if (e.target === knob || pinchActive) return;
+      if (zoom > 1.01) {
+        draggingPan = true;
+        draggingSplit = false;
+        panStartX = e.clientX;
+        panStartY = e.clientY;
+        panOriginX = panX;
+        panOriginY = panY;
+        stage.classList.add("is-panning");
+        stage.setPointerCapture(e.pointerId);
+        return;
+      }
       startX = e.clientX;
       startY = e.clientY;
       lockedAxis = false;
+      draggingSplit = true;
       if (e.pointerType === "mouse") {
-        dragging = true;
         lockedAxis = true;
         stage.setPointerCapture(e.pointerId);
-        updateFromClientX(e.clientX);
-      } else {
-        dragging = true;
+        updateSplitFromClientX(e.clientX);
       }
     });
+
     stage.addEventListener("pointermove", (e) => {
-      if (!dragging || e.target === knob) return;
+      if (pinchActive) return;
+      if (draggingPan) {
+        panX = panOriginX + (e.clientX - panStartX);
+        panY = panOriginY + (e.clientY - panStartY);
+        scheduleRender(false);
+        return;
+      }
+      if (!draggingSplit || e.target === knob) return;
       if (!lockedAxis) {
         const dx = Math.abs(e.clientX - startX);
         const dy = Math.abs(e.clientY - startY);
         if (dx < 6 && dy < 6) return;
         if (dy > dx) {
-          dragging = false;
+          draggingSplit = false;
           return;
         }
         lockedAxis = true;
       }
-      updateFromClientX(e.clientX);
+      updateSplitFromClientX(e.clientX);
     });
-    stage.addEventListener("pointerup", () => { dragging = false; });
-    stage.addEventListener("pointercancel", () => { dragging = false; });
+
+    const endStagePointer = () => {
+      draggingSplit = false;
+      draggingPan = false;
+      stage.classList.remove("is-panning");
+    };
+    stage.addEventListener("pointerup", endStagePointer);
+    stage.addEventListener("pointercancel", endStagePointer);
+
+    stage.addEventListener("dblclick", (e) => {
+      if (e.target === knob) return;
+      if (zoom > 1.15) {
+        zoomAt(1, e.clientX, e.clientY);
+      } else {
+        zoomAt(2.5, e.clientX, e.clientY);
+      }
+    });
+
+    window.addEventListener("resize", () => scheduleRender(false), { passive: true });
+    renderCompareNow(false);
   }
+
   document.querySelectorAll("[data-split-preset]").forEach((btn) => {
-    btn.addEventListener("click", () => applySplitNow(btn.dataset.splitPreset, true));
+    btn.addEventListener("click", () => setSplit(btn.dataset.splitPreset, true));
   });
+  function stageCenter() {
+    if (!stage) return { x: 0, y: 0 };
+    const r = stage.getBoundingClientRect();
+    return { x: r.left + r.width * 0.5, y: r.top + r.height * 0.5 };
+  }
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener("click", () => {
+      const c = stageCenter();
+      zoomAt(zoom * 1.45, c.x, c.y);
+    });
+  }
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener("click", () => {
+      const c = stageCenter();
+      zoomAt(zoom / 1.45, c.x, c.y);
+    });
+  }
+  if (zoomResetBtn) {
+    zoomResetBtn.addEventListener("click", () => {
+      const c = stageCenter();
+      zoomAt(1, c.x, c.y);
+    });
+  }
 
   // Workspace Tabs Switcher
   const wsTitle = document.getElementById("wsTitle");
