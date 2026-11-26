@@ -92,50 +92,35 @@
             <i style="background:#febc2e"></i>
             <i style="background:#28c840"></i>
           </div>
-          <span class="win-title">Before / After Split Inspector • JaNai 4x</span>
+          <span class="win-title">Before / After Split Inspector • MangaJaNai</span>
         </div>
 
         <div class="compare-stage" id="compareStage" style="--split: 52%;">
-          <!-- Clean Upscaled Vector Side (Right / Background) -->
-          <svg class="compare-layer" viewBox="0 0 640 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <defs>
-              <linearGradient id="skyUp" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#102247" />
-                <stop offset="55%" stop-color="#1a3d7c" />
-                <stop offset="100%" stop-color="#0b1328" />
-              </linearGradient>
-              <radialGradient id="sunUp" cx="72%" cy="32%" r="36%">
-                <stop offset="0%" stop-color="#7dd3fc" stop-opacity="0.95" />
-                <stop offset="55%" stop-color="#38bdf8" stop-opacity="0.35" />
-                <stop offset="100%" stop-color="#38bdf8" stop-opacity="0" />
-              </radialGradient>
-            </defs>
-            <rect width="640" height="400" fill="url(#skyUp)" />
-            <rect width="640" height="400" fill="url(#sunUp)" />
-            <circle cx="460" cy="128" r="56" fill="#e0f2fe" />
-            <path d="M0 290 L125 185 L235 255 L365 145 L515 245 L640 190 L640 400 L0 400 Z" fill="#0d1b3a" stroke="#60a5fa" stroke-width="2.5" />
-            <path d="M0 325 L190 250 L310 305 L470 215 L640 295 L640 400 L0 400 Z" fill="#070e21" stroke="#93c5fd" stroke-width="1.8" opacity="0.92" />
-            <path d="M120 110 C190 78 270 96 318 148" fill="none" stroke="#f0f9ff" stroke-width="3" stroke-linecap="round" opacity="0.82" />
-          </svg>
-
-          <!-- Blocky / Compressed Original Side (Left / Clipped) -->
-          <svg class="compare-layer compare-before" viewBox="0 0 640 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <defs>
-              <pattern id="jpegBlocks" width="20" height="20" patternUnits="userSpaceOnUse">
-                <rect width="20" height="20" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="1" />
-              </pattern>
-            </defs>
-            <rect width="640" height="400" fill="#131f3b" />
-            <circle cx="460" cy="128" r="56" fill="#cbd5e1" opacity="0.72" />
-            <path d="M0 296 L64 240 L128 192 L180 228 L236 260 L300 204 L365 150 L440 202 L515 248 L640 196 L640 400 L0 400 Z" fill="#0b142b" stroke="#475569" stroke-width="5" stroke-linejoin="bevel" opacity="0.88" />
-            <path d="M0 328 L190 256 L310 310 L470 222 L640 300 L640 400 L0 400 Z" fill="#060b18" />
-            <rect width="640" height="400" fill="url(#jpegBlocks)" />
-          </svg>
+          <img
+            src="./compare-after.webp"
+            alt="MangaJaNai upscaled manga screentone restoration"
+            width="720"
+            height="648"
+            decoding="async"
+            fetchpriority="high"
+            class="compare-layer compare-img"
+            draggable="false"
+          />
+          <img
+            src="./compare-before.webp"
+            alt="Original compressed manga scan before upscaling"
+            width="720"
+            height="648"
+            decoding="async"
+            fetchpriority="high"
+            class="compare-layer compare-img compare-before"
+            draggable="false"
+          />
 
           <div class="compare-divider"></div>
-          <div class="compare-knob" aria-hidden="true">⇄</div>
-          <span class="compare-badge left">Original 1x + JPEG</span>
-          <span class="compare-badge right">JaNai V3 + Detail 4x</span>
+          <div class="compare-knob" id="compareKnob" aria-hidden="true">⇄</div>
+          <span class="compare-badge left">Original Scan</span>
+          <span class="compare-badge right">MangaJaNai Upscaled</span>
         </div>
 
         <div class="compare-controls">

@@ -222,37 +222,93 @@
     });
   }
 
-  // Interactive Compare Slider
+  // Interactive Compare Slider (rAF throttled, scroll-safe on touch devices)
   const stage = document.getElementById("compareStage");
+  const knob = document.getElementById("compareKnob");
   const range = document.getElementById("compareRange");
-  function setSplit(pct) {
+  let pendingPct = 52;
+  let rafId = 0;
+
+  function applySplitNow(pct, animated = false) {
     const clamped = Math.max(4, Math.min(96, Number(pct) || 50));
-    if (stage) stage.style.setProperty("--split", `${clamped}%`);
+    pendingPct = clamped;
+    if (!stage) return;
+    stage.classList.toggle("is-animated", Boolean(animated));
+    stage.style.setProperty("--split", `${clamped}%`);
     if (range) range.value = String(Math.round(clamped));
   }
+
+  function scheduleSplit(pct) {
+    pendingPct = Math.max(4, Math.min(96, Number(pct) || 50));
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => {
+      rafId = 0;
+      applySplitNow(pendingPct, false);
+    });
+  }
+
   if (range) {
-    range.addEventListener("input", () => setSplit(range.value));
+    range.addEventListener("input", () => scheduleSplit(range.value));
   }
   if (stage) {
     let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let lockedAxis = false;
+
     const updateFromClientX = (clientX) => {
       const rect = stage.getBoundingClientRect();
       if (rect.width <= 0) return;
-      setSplit(((clientX - rect.left) / rect.width) * 100);
+      scheduleSplit(((clientX - rect.left) / rect.width) * 100);
     };
+
+    if (knob) {
+      knob.addEventListener("pointerdown", (e) => {
+        dragging = true;
+        lockedAxis = true;
+        knob.setPointerCapture(e.pointerId);
+        updateFromClientX(e.clientX);
+      });
+      knob.addEventListener("pointermove", (e) => {
+        if (dragging) updateFromClientX(e.clientX);
+      });
+      knob.addEventListener("pointerup", () => { dragging = false; });
+      knob.addEventListener("pointercancel", () => { dragging = false; });
+    }
+
     stage.addEventListener("pointerdown", (e) => {
-      dragging = true;
-      stage.setPointerCapture(e.pointerId);
-      updateFromClientX(e.clientX);
+      if (e.target === knob) return;
+      startX = e.clientX;
+      startY = e.clientY;
+      lockedAxis = false;
+      if (e.pointerType === "mouse") {
+        dragging = true;
+        lockedAxis = true;
+        stage.setPointerCapture(e.pointerId);
+        updateFromClientX(e.clientX);
+      } else {
+        dragging = true;
+      }
     });
     stage.addEventListener("pointermove", (e) => {
-      if (dragging) updateFromClientX(e.clientX);
+      if (!dragging || e.target === knob) return;
+      if (!lockedAxis) {
+        const dx = Math.abs(e.clientX - startX);
+        const dy = Math.abs(e.clientY - startY);
+        if (dx < 6 && dy < 6) return;
+        if (dy > dx) {
+          dragging = false;
+          return;
+        }
+        lockedAxis = true;
+      }
+      updateFromClientX(e.clientX);
     });
     stage.addEventListener("pointerup", () => { dragging = false; });
     stage.addEventListener("pointercancel", () => { dragging = false; });
   }
   document.querySelectorAll("[data-split-preset]").forEach((btn) => {
-    btn.addEventListener("click", () => setSplit(btn.dataset.splitPreset));
+    btn.addEventListener("click", () => applySplitNow(btn.dataset.splitPreset, true));
   });
 
   // Workspace Tabs Switcher
