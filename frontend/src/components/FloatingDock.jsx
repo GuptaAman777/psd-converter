@@ -2,13 +2,14 @@ import React from "react";
 import { motion } from "framer-motion";
 import {
   Sparkles, Wand2, Eraser, Layers, Settings, SplitSquareHorizontal,
-  Cpu, Github
+  Cpu, Github, Zap
 } from "lucide-react";
 
 const TABS = [
   { id: "converter", label: "Converter", icon: Sparkles },
   { id: "upscaler", label: "Upscaler", icon: Wand2 },
   { id: "denoiser", label: "Denoiser", icon: Eraser },
+  { id: "janai", label: "JaNai AI", icon: Zap },
   { id: "stitcher", label: "Stitcher", icon: Layers },
   { id: "settings", label: "Settings", icon: Settings },
 ];

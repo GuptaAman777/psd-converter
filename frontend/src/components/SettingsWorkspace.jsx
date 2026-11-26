@@ -110,6 +110,31 @@ const MANUAL_SECTIONS = [
     ],
   },
   {
+    id: "janai",
+    title: "JaNai AI (Manga & Art)",
+    badge: "SPAN / FDAT / ESRGAN",
+    jumpTab: "janai",
+    jumpLabel: "Open JaNai AI",
+    overview:
+      "Runs 22 specialized MangaJaNai V1 and IllustrationJaNai V3 Vulkan models (SPAN, FDAT, ESRGAN 2x/4x) via native NCNN with zero CPU fallbacks.",
+    steps: [
+      "Pick a Model Family matching your artwork: FDAT (transformers for rich illustration), SPAN (ultra-fast 2x illustration), or MangaJaNai ESRGAN (2x/4x screentone & ink scans).",
+      "Choose a specific Detail/Denoise or scan resolution preset (1200p–2048p). Models present in local `ncnn/` load immediately; others can be downloaded from GitHub on demand.",
+      "Optionally adjust VRAM Tile Size (Auto handles large pages safely), FP16 Vulkan Compute, or 50% SSAA target scaling.",
+      "Queue your artwork or manga chapters and launch.",
+    ],
+    controls: [
+      { name: "IllustrationJaNai V3 (FDAT & SPAN)", desc: "FDAT-M / FDAT-XL transformers and compact SPAN-S models tailored for crisp anime illustrations and digital paintings." },
+      { name: "MangaJaNai V1 (ESRGAN 2x/4x)", desc: "Resolution-tuned weights (1200p to 2048p) preserving halftone screentones, blacks, and speech-bubble text." },
+      { name: "FP16 Vulkan & Smart Alignment", desc: "Automatically applies model-specific reflect padding (2px, 8px, 16px) and falls back to FP32 automatically if a GPU lacks FP16 compute." },
+      { name: "On-Demand GitHub Downloads", desc: "Install individual packs directly inside the JaNai AI card or Model Packs manager whenever local copies are absent." },
+    ],
+    tips: [
+      "For FDAT-XL on 4GB–6GB GPUs, keep VRAM Tile Size at Auto (0) or 256px to prevent out-of-memory errors.",
+      "Match MangaJaNai 1200p–2048p weights roughly to your source page height for the cleanest screentone preservation.",
+    ],
+  },
+  {
     id: "stitcher",
     title: "Image Stitcher Module",
     badge: "Strips & Grids",
@@ -174,7 +199,7 @@ const MANUAL_SECTIONS = [
       "Toggle TTA 8-Pass Ensemble only for hero stills requiring maximum noise/aliasing suppression (~8× slower than single-pass).",
     ],
     controls: [
-      { name: "Keyboard Shortcuts", desc: "Ctrl+1 Converter • Ctrl+2 AI Upscaler • Ctrl+3 AI Denoiser • Ctrl+4 Stitcher • Ctrl+5 Settings & Manuals • Ctrl+B Before/After Compare." },
+      { name: "Keyboard Shortcuts", desc: "Ctrl+1 Converter • Ctrl+2 AI Upscaler • Ctrl+3 AI Denoiser • Ctrl+4 JaNai AI • Ctrl+5 Stitcher • Ctrl+6 Settings & Manuals • Ctrl+B Before/After Compare." },
       { name: "Multi-GPU & CPU (-1)", desc: "Select GPU 0, GPU 1, etc. for laptops with dual iGPU/dGPU setups, or force CPU Fallback (-1) for compatibility debugging." },
       { name: "Preferences & Themes", desc: "Switch between 6 color themes and persist default JPEG/WEBP/PNG/EXIF/PDF settings in local settings.json." },
       { name: "Activity Logs & Updates", desc: "Filter live INFO/SUCCESS/WARNING/ERROR/TERMINAL logs, export imagetool_logs.txt, and check GitHub releases for GuptaAman777/psd-converter." },
@@ -214,6 +239,7 @@ export default function SettingsWorkspace({
   const [pdfQ, setPdfQ] = useState(saved.pdf_quality || "High");
   const [confirmInstall, setConfirmInstall] = useState(saved.confirm_model_install !== false);
   const [confirmDelete, setConfirmDelete] = useState(saved.confirm_model_delete !== false);
+  const [progressLiquidGlass, setProgressLiquidGlass] = useState(saved.progress_liquid_glass !== false);
 
   useEffect(() => {
     if (!bootstrap?.settings) return;
@@ -226,6 +252,7 @@ export default function SettingsWorkspace({
     if (s.pdf_quality) setPdfQ(s.pdf_quality);
     if (typeof s.confirm_model_install === "boolean") setConfirmInstall(s.confirm_model_install);
     if (typeof s.confirm_model_delete === "boolean") setConfirmDelete(s.confirm_model_delete);
+    if (typeof s.progress_liquid_glass === "boolean") setProgressLiquidGlass(s.progress_liquid_glass);
   }, [bootstrap?.settings]);
 
   const savePref = (patch) => {
@@ -364,6 +391,18 @@ export default function SettingsWorkspace({
                     </button>
                   );
                 })}
+              </div>
+
+              <div className="pt-2.5 mt-1 border-t border-white/10">
+                <GlassSwitch
+                  checked={progressLiquidGlass}
+                  onChange={(val) => {
+                    setProgressLiquidGlass(val);
+                    savePref({ progress_liquid_glass: val });
+                  }}
+                  label="Progress Bar Liquid Glass Effect"
+                  sublabel="Use translucent frosted glass on floating progress & completion cards (disable for solid opaque)"
+                />
               </div>
             </GlassCard>
 
@@ -664,7 +703,7 @@ export default function SettingsWorkspace({
                     className="liquid-pill-btn rounded-full px-3.5 py-1.5 text-[12px] font-semibold flex items-center gap-1.5 cursor-pointer"
                   >
                     <Rocket className="w-3.5 h-3.5" />
-                    <span>Releases (v5.1–v7.0)</span>
+                    <span>Releases (v5.1–v7.5)</span>
                   </button>
                   <button
                     type="button"
@@ -688,13 +727,13 @@ export default function SettingsWorkspace({
                 <div className="rounded-xl bg-black/25 border border-white/10 p-3">
                   <div className="font-bold text-[var(--accent-hover)] mb-1">Neural NCNN Engines</div>
                   <div className="text-white/75">
-                    Real-ESRGAN (x4plus, AnimeVideoV3) • Real-CUGAN • Waifu2x • SRMD
+                    Real-ESRGAN (x4plus, AnimeVideoV3) • Real-CUGAN • Waifu2x • SRMD • MangaJaNai / IllustrationJaNai (FDAT, SPAN)
                   </div>
                 </div>
                 <div className="rounded-xl bg-black/25 border border-white/10 p-3">
                   <div className="font-bold text-[var(--accent-hover)] mb-1">Imaging Core</div>
                   <div className="text-white/75">
-                    Python 3.13 • Pillow • psd-tools • PyMuPDF • psutil
+                    Python 3.13 • Pillow • ncnn • numpy • psd-tools • PyMuPDF • psutil
                   </div>
                 </div>
               </div>
@@ -833,8 +872,9 @@ export default function SettingsWorkspace({
                       ["Ctrl+1", "Converter"],
                       ["Ctrl+2", "Upscaler"],
                       ["Ctrl+3", "Denoiser"],
-                      ["Ctrl+4", "Stitcher"],
-                      ["Ctrl+5", "Settings"],
+                      ["Ctrl+4", "JaNai AI"],
+                      ["Ctrl+5", "Stitcher"],
+                      ["Ctrl+6", "Settings"],
                       ["Ctrl+B", "Compare"],
                     ].map(([k, lbl]) => (
                       <span

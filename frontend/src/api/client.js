@@ -1,8 +1,9 @@
 const BASE = "";
 
-export function previewUrl(filePath, maxSize = 420) {
+export function previewUrl(filePath, maxSize = 420, cacheKey = "") {
   if (!filePath) return "";
-  return `${BASE}/api/preview?path=${encodeURIComponent(filePath)}&max_size=${maxSize}`;
+  const v = cacheKey ? `&v=${encodeURIComponent(String(cacheKey))}` : "";
+  return `${BASE}/api/preview?path=${encodeURIComponent(filePath)}&max_size=${maxSize}${v}`;
 }
 
 export async function apiGet(path) {

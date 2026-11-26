@@ -4,6 +4,12 @@ import threading
 import urllib.request
 from typing import Callable, Optional
 
+from src.core.janai_catalog import (
+    JANAI_MODEL_CATALOG,
+    JANAI_MODEL_MAP,
+    get_janai_download_dest,
+    resolve_janai_model_paths,
+)
 from src.utils.helpers import _is_dir_writable, get_app_user_data_dir, get_tool_info
 
 _RAW_UPSCAYL = "https://raw.githubusercontent.com/upscayl/upscayl/main/resources/models"
@@ -133,7 +139,8 @@ MODEL_CATALOG = [
     },
 ]
 
-_CATALOG_MAP = {m["id"]: m for m in MODEL_CATALOG}
+ALL_MODEL_CATALOG = [*MODEL_CATALOG, *JANAI_MODEL_CATALOG]
+_CATALOG_MAP = {m["id"]: m for m in ALL_MODEL_CATALOG}
 _ACTIVE_DOWNLOADS: set[str] = set()
 _LOCK = threading.Lock()
 
@@ -168,6 +175,8 @@ def resolve_esr_models_dir_for(model_name: str) -> str:
 
 
 def is_model_installed(model_id: str) -> bool:
+    if model_id in JANAI_MODEL_MAP:
+        return bool(resolve_janai_model_paths(model_id)["installed"])
     if model_id not in _CATALOG_MAP:
         return False
     models_dir = get_esr_models_dir()
@@ -183,10 +192,21 @@ def get_catalog_status() -> list[dict]:
     with _LOCK:
         active = set(_ACTIVE_DOWNLOADS)
     items = []
-    for item in MODEL_CATALOG:
+    for item in ALL_MODEL_CATALOG:
+        if item["id"] in JANAI_MODEL_MAP:
+            res = resolve_janai_model_paths(item["id"])
+            installed = bool(res["installed"])
+            source = res["source"]
+            removable = bool(res["removable"])
+        else:
+            installed = is_model_installed(item["id"])
+            source = "downloaded" if installed else "none"
+            removable = installed
         items.append({
             **item,
-            "installed": is_model_installed(item["id"]),
+            "installed": installed,
+            "source": source,
+            "removable": removable,
             "downloading": item["id"] in active,
         })
     return items
@@ -195,7 +215,7 @@ def get_catalog_status() -> list[dict]:
 def _download_file(url: str, dest_path: str, on_chunk: Optional[Callable[[int, int], None]] = None):
     tmp_path = f"{dest_path}.part"
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "ImageTool-Liquid-Studio"})
+        req = urllib.request.Request(url, headers={"User-Agent": "ImageTool-Desktop"})
         with urllib.request.urlopen(req, timeout=60) as resp:
             total = int(resp.headers.get("Content-Length") or 0)
             downloaded = 0
@@ -217,6 +237,11 @@ def _download_file(url: str, dest_path: str, on_chunk: Optional[Callable[[int, i
                 pass
 
 
+def is_model_downloading(model_id: str) -> bool:
+    with _LOCK:
+        return model_id in _ACTIVE_DOWNLOADS
+
+
 def download_model_pack(model_id: str, progress_cb: Optional[Callable[[int, str], None]] = None) -> dict:
     meta = _CATALOG_MAP.get(model_id)
     if not meta:
@@ -227,10 +252,14 @@ def download_model_pack(model_id: str, progress_cb: Optional[Callable[[int, str]
             raise RuntimeError(f"Model {model_id} is already downloading")
         _ACTIVE_DOWNLOADS.add(model_id)
 
-    models_dir = get_esr_models_dir()
-    param_dest = os.path.join(models_dir, f"{model_id}.param")
-    bin_dest = os.path.join(models_dir, f"{model_id}.bin")
+    if model_id in JANAI_MODEL_MAP:
+        param_dest, bin_dest = get_janai_download_dest(model_id)
+    else:
+        models_dir = get_esr_models_dir()
+        param_dest = os.path.join(models_dir, f"{model_id}.param")
+        bin_dest = os.path.join(models_dir, f"{model_id}.bin")
 
+    had_param_before = os.path.isfile(param_dest)
     try:
         if progress_cb:
             progress_cb(2, f"Fetching {meta['label']} config...")
@@ -245,7 +274,15 @@ def download_model_pack(model_id: str, progress_cb: Optional[Callable[[int, str]
         _download_file(meta["bin_url"], bin_dest, on_chunk=_on_bin_chunk)
         if progress_cb:
             progress_cb(100, "Installed")
-        return {**meta, "installed": True, "downloading": False}
+        return {**meta, "installed": True, "source": "downloaded", "removable": True, "downloading": False}
+    except Exception:
+        # Remove freshly downloaded .param if .bin failed so incomplete pairs don't linger
+        if not had_param_before and os.path.isfile(param_dest) and not os.path.isfile(bin_dest):
+            try:
+                os.remove(param_dest)
+            except Exception:
+                pass
+        raise
     finally:
         with _LOCK:
             _ACTIVE_DOWNLOADS.discard(model_id)
@@ -254,10 +291,14 @@ def download_model_pack(model_id: str, progress_cb: Optional[Callable[[int, str]
 def remove_model_pack(model_id: str) -> bool:
     if model_id not in _CATALOG_MAP:
         raise ValueError(f"Unknown or built-in model cannot be deleted: {model_id}")
-    models_dir = get_esr_models_dir()
+    if model_id in JANAI_MODEL_MAP:
+        param_dest, bin_dest = get_janai_download_dest(model_id)
+        targets = (param_dest, bin_dest)
+    else:
+        models_dir = get_esr_models_dir()
+        targets = tuple(os.path.join(models_dir, f"{model_id}{ext}") for ext in (".param", ".bin"))
     removed = False
-    for ext in (".param", ".bin"):
-        fp = os.path.join(models_dir, f"{model_id}{ext}")
+    for fp in targets:
         if os.path.isfile(fp):
             os.remove(fp)
             removed = True

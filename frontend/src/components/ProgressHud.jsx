@@ -20,12 +20,14 @@ export default function ProgressHud({
   activeJob,
   completion,
   errorAlert,
+  liquidGlass = true,
   onCancel,
   onOpenFolder,
   onCompare,
   onDismissComplete,
   onDismissError,
 }) {
+  const hudSurface = liquidGlass ? "liquid-dock" : "opaque-hud";
   const constraintsRef = useRef(null);
   const dragX = useMotionValue(0);
   const dragY = useMotionValue(0);
@@ -76,7 +78,7 @@ export default function ProgressHud({
               transition={{ type: "spring", stiffness: 380, damping: 28 }}
               className="pointer-events-auto w-full max-w-[min(92vw,32rem)] cursor-grab active:cursor-grabbing touch-none select-none"
             >
-              <div className="liquid-dock rounded-3xl p-4 sm:p-4.5 border border-white/25 shadow-2xl">
+              <div className={`${hudSurface} rounded-3xl p-4 sm:p-4.5 border border-white/25 shadow-2xl`}>
                 {/* Subtle drag indicator & optional recenter button */}
                 <div
                   onDoubleClick={recenterHud}
@@ -112,17 +114,21 @@ export default function ProgressHud({
                   </span>
                 </div>
 
-                <div className="relative h-2.5 rounded-full bg-white/10 overflow-hidden mb-2.5">
+                <div className={`relative h-2.5 rounded-full overflow-hidden mb-2.5 ${liquidGlass ? "bg-white/10" : "bg-white/15"}`}>
                   <motion.div
                     className="h-full rounded-full relative overflow-hidden"
                     animate={{ width: `${Math.max(4, activeJob.percent || 0)}%` }}
                     transition={{ ease: "easeOut", duration: 0.25 }}
                     style={{
-                      background: "linear-gradient(90deg, var(--accent), var(--accent-hover))",
-                      boxShadow: "0 0 16px var(--accent-glow)",
+                      background: liquidGlass
+                        ? "linear-gradient(90deg, var(--accent), var(--accent-hover))"
+                        : "var(--accent)",
+                      boxShadow: liquidGlass ? "0 0 16px var(--accent-glow)" : "none",
                     }}
                   >
-                    <div className="shimmer-bar absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                    {liquidGlass && (
+                      <div className="shimmer-bar absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                    )}
                   </motion.div>
                 </div>
 
@@ -160,7 +166,7 @@ export default function ProgressHud({
               transition={{ type: "spring", stiffness: 380, damping: 28 }}
               className="pointer-events-auto w-full max-w-[min(92vw,36rem)] cursor-grab active:cursor-grabbing touch-none select-none"
             >
-              <div className="liquid-dock rounded-3xl p-4 sm:p-4.5 border border-emerald-400/35 shadow-2xl">
+              <div className={`${hudSurface} rounded-3xl p-4 sm:p-4.5 border border-emerald-400/35 shadow-2xl`}>
                 <div
                   onDoubleClick={recenterHud}
                   title="Drag to move • Double-click to recenter"
@@ -219,7 +225,7 @@ export default function ProgressHud({
                     <button
                       type="button"
                       onPointerDown={(e) => e.stopPropagation()}
-                      onClick={() => onCompare(completion.pairs)}
+                      onClick={() => onCompare(completion.pairs, completion)}
                       className="liquid-pill-btn rounded-full px-3.5 py-1.5 text-[12px] font-semibold text-white flex items-center gap-1.5 cursor-pointer"
                     >
                       <SplitSquareHorizontal className="w-3.5 h-3.5 text-[var(--accent-hover)]" />
@@ -251,7 +257,7 @@ export default function ProgressHud({
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[min(92vw,28rem)] liquid-dock rounded-2xl p-4 border border-rose-400/40"
+            className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[min(92vw,28rem)] ${hudSurface} rounded-2xl p-4 border border-rose-400/40`}
           >
             <div className="flex items-start gap-2.5">
               <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />

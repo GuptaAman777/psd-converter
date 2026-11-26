@@ -8,3 +8,5 @@ psd-tools
 PyMuPDF
 requests
 psutil
+ncnn>=1.0.20261020
+numpy

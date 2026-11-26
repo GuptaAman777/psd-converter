@@ -9,7 +9,7 @@ from src.core.ncnn_runner import (
     cleanup_stage_files, prepare_ncnn_stage, run_ncnn_process,
     sanitize_ncnn_gpu_args, save_high_quality_image
 )
-from src.utils.helpers import calculate_progress_info, get_tool_info, normalize_ncnn_format, resolve_conflict_path
+from src.utils.helpers import calculate_progress_info, EtaTracker, get_tool_info, normalize_ncnn_format, resolve_conflict_path
 
 
 class DenoiserThread(WorkerThread):
@@ -70,6 +70,7 @@ class DenoiserThread(WorkerThread):
 
     def run(self):
         self.start_time = time.time()
+        self._eta_tracker = EtaTracker(self.total_files)
 
         for file_path in self.files:
             try:
@@ -116,7 +117,9 @@ class DenoiserThread(WorkerThread):
                     self.total_output_size += os.path.getsize(output_path)
 
                 progress = int((self.processed_files / max(1, self.total_files)) * 100)
-                eta_text, speed_text = calculate_progress_info(self.processed_files, self.total_files, self.start_time)
+                eta_text, speed_text = calculate_progress_info(
+                    self.processed_files, self.total_files, self.start_time, tracker=getattr(self, "_eta_tracker", None)
+                )
                 self.progress_signal.emit(progress, eta_text, speed_text)
 
             except Exception as e:
@@ -212,10 +215,13 @@ class DenoiserThread(WorkerThread):
                 return
 
             def _on_sub_progress(sub_pct):
-                overall = int(((file_index + (sub_pct / 100.0)) / max(1, self.total_files)) * 100)
-                eta_text, speed_text = calculate_progress_info(self.processed_files, self.total_files, self.start_time)
+                units_done = file_index + (sub_pct / 100.0)
+                overall = int((units_done / max(1, self.total_files)) * 100)
+                eta_text, speed_text = calculate_progress_info(
+                    units_done, self.total_files, self.start_time, tracker=getattr(self, "_eta_tracker", None)
+                )
                 extra = f"Current image: {sub_pct:.0f}%"
-                spd = extra if self.processed_files == 0 else f"{speed_text} • {extra}"
+                spd = extra if "Calculating" in speed_text else f"{speed_text} • {extra}"
                 self.progress_signal.emit(min(99, overall), eta_text, spd)
 
             returncode, err_text = run_ncnn_process(

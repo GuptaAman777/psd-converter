@@ -12,12 +12,14 @@ function naturalCompare(a, b) {
 }
 
 function formatPredictedName(item, previewRule) {
-  if (!previewRule || (!previewRule.suffix && !previewRule.ext)) return "";
+  if (!previewRule) return "";
+  const suf = (previewRule.perFileSuffixes && previewRule.perFileSuffixes[item.path]) ?? previewRule.suffix ?? "";
+  if (!suf && !previewRule.ext) return "";
   const dot = item.name.lastIndexOf(".");
   const stem = dot > 0 ? item.name.slice(0, dot) : item.name;
   const origExt = dot > 0 ? item.name.slice(dot + 1) : item.ext;
   const nextExt = previewRule.ext || origExt;
-  return `${stem}${previewRule.suffix || ""}.${nextExt}`;
+  return `${stem}${suf}.${nextExt}`;
 }
 
 export default function QueuePane({

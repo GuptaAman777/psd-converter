@@ -2,7 +2,11 @@ import React, { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Download, Trash2, CheckCircle2, Sparkles, X, Loader2, ArrowUpRight, AlertTriangle } from "lucide-react";
 
-const CATEGORIES = ["All", "Fast Compact", "Anime & Art", "Photo & Realism", "Restoration"];
+const ENGINE_FILTERS = [
+  { value: "all", label: "All Packs" },
+  { value: "realesr", label: "Upscayl / Real-ESRGAN" },
+  { value: "janai_ncnn", label: "JaNai NCNN (Manga & Art)" },
+];
 
 const SORT_OPTIONS = [
   { value: "recommended", label: "Sort: Recommended" },
@@ -17,6 +21,7 @@ export default function ModelManagerModal({
   onClose,
   catalog = [],
   downloadProgress = {},
+  initialEngineFilter = "all",
   confirmInstall = true,
   confirmDelete = true,
   onSetConfirmInstall,
@@ -25,18 +30,36 @@ export default function ModelManagerModal({
   onRemove,
   onUseModel,
 }) {
+  const [engineFilter, setEngineFilter] = useState(initialEngineFilter);
   const [cat, setCat] = useState("All");
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("recommended");
   const [pendingAction, setPendingAction] = useState(null); // { type: "install"|"delete", model }
   const [dontAskAgain, setDontAskAgain] = useState(false);
 
+  React.useEffect(() => {
+    if (open) {
+      setEngineFilter(initialEngineFilter || "all");
+      setCat("All");
+    }
+  }, [open, initialEngineFilter]);
+
+  const categories = useMemo(() => {
+    const base = catalog.filter((m) => engineFilter === "all" || (m.engine || "realesr") === engineFilter);
+    const seen = [];
+    for (const m of base) {
+      if (m.category && !seen.includes(m.category)) seen.push(m.category);
+    }
+    return ["All", ...seen];
+  }, [catalog, engineFilter]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     const list = catalog.filter((m) => {
+      if (engineFilter !== "all" && (m.engine || "realesr") !== engineFilter) return false;
       if (cat !== "All" && m.category !== cat) return false;
       if (q) {
-        const hay = `${m.label} ${m.id} ${m.category} ${m.description}`.toLowerCase();
+        const hay = `${m.label} ${m.id} ${m.category} ${m.family || ""} ${m.description}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;
@@ -55,9 +78,19 @@ export default function ModelManagerModal({
       return [...list].sort((a, b) => Number(Boolean(b.installed)) - Number(Boolean(a.installed)) || a.label.localeCompare(b.label));
     }
     return list;
-  }, [catalog, cat, query, sortBy]);
+  }, [catalog, engineFilter, cat, query, sortBy]);
 
-  const installedCount = catalog.filter((m) => m.installed).length;
+  const scopedCatalog = useMemo(
+    () => catalog.filter((m) => engineFilter === "all" || (m.engine || "realesr") === engineFilter),
+    [catalog, engineFilter]
+  );
+  const installedCount = scopedCatalog.filter((m) => m.installed).length;
+  const headerSubtitle =
+    engineFilter === "janai_ncnn"
+      ? "On-demand MangaJaNai & IllustrationJaNai Vulkan NCNN packs (GitHub v1.0.0)"
+      : engineFilter === "realesr"
+      ? "On-demand NCNN Vulkan models powered by Upscayl Engine (2025-12-07)"
+      : "On-demand NCNN Vulkan models (Upscayl / Real-ESRGAN & JaNai NCNN)";
 
   const requestInstall = (model) => {
     if (!confirmInstall) {
@@ -118,11 +151,11 @@ export default function ModelManagerModal({
                   <div className="flex items-center gap-2">
                     <span className="text-[15px] font-bold text-white">Additional AI Model Packs</span>
                     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-white/80">
-                      {installedCount} / {catalog.length} Installed
+                      {installedCount} / {scopedCatalog.length} Installed
                     </span>
                   </div>
                   <div className="text-[11.5px] text-white/55 truncate">
-                    On-demand NCNN Vulkan models powered by Upscayl Engine (2025-12-07)
+                    {headerSubtitle}
                   </div>
                 </div>
               </div>
@@ -137,9 +170,50 @@ export default function ModelManagerModal({
             </div>
 
             {/* Filters & Sorting */}
-            <div className="px-4 sm:px-6 py-2.5 border-b border-white/10 flex flex-wrap items-center justify-between gap-2">
+            <div className="px-4 sm:px-6 py-2.5 border-b border-white/10 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {ENGINE_FILTERS.map((ef) => (
+                    <button
+                      key={ef.value}
+                      type="button"
+                      onClick={() => {
+                        setEngineFilter(ef.value);
+                        setCat("All");
+                      }}
+                      className={`rounded-full px-3 py-1 text-[11px] font-bold cursor-pointer ${
+                        engineFilter === ef.value ? "bg-white/20 text-white border border-white/30" : "liquid-pill-btn text-white/65"
+                      }`}
+                    >
+                      {ef.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    data-testid="model-sort-select"
+                    className="liquid-select rounded-full px-3 py-1 text-[11.5px] font-medium cursor-pointer"
+                  >
+                    {SORT_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Filter models..."
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="liquid-input rounded-full px-3.5 py-1 text-[12px] flex-1 sm:w-44"
+                  />
+                </div>
+              </div>
+
               <div className="flex flex-wrap gap-1.5">
-                {CATEGORIES.map((c) => (
+                {categories.map((c) => (
                   <button
                     key={c}
                     type="button"
@@ -151,28 +225,6 @@ export default function ModelManagerModal({
                     {c}
                   </button>
                 ))}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  data-testid="model-sort-select"
-                  className="liquid-select rounded-full px-3 py-1 text-[11.5px] font-medium cursor-pointer"
-                >
-                  {SORT_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  placeholder="Filter models..."
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="liquid-input rounded-full px-3.5 py-1 text-[12px] flex-1 sm:w-44"
-                />
               </div>
             </div>
 
@@ -242,20 +294,22 @@ export default function ModelManagerModal({
                       <div className="flex items-center justify-end gap-2">
                         {m.installed ? (
                           <>
-                            <button
-                              type="button"
-                              onClick={() => requestDelete(m)}
-                              className="liquid-pill-btn rounded-full px-3 py-1.5 text-[11.5px] font-semibold text-rose-300 hover:bg-rose-500/25 flex items-center gap-1 cursor-pointer"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Remove</span>
-                            </button>
+                            {m.removable !== false && (
+                              <button
+                                type="button"
+                                onClick={() => requestDelete(m)}
+                                className="liquid-pill-btn rounded-full px-3 py-1.5 text-[11.5px] font-semibold text-rose-300 hover:bg-rose-500/25 flex items-center gap-1 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span>Remove</span>
+                              </button>
+                            )}
                             <button
                               type="button"
                               onClick={() => onUseModel(m)}
                               className="liquid-hero-btn rounded-full px-3.5 py-1.5 text-[11.5px] font-semibold text-white flex items-center gap-1 cursor-pointer"
                             >
-                              <span>Use in Upscaler</span>
+                              <span>{m.engine === "janai_ncnn" ? "Use in JaNai AI" : "Use in Upscaler"}</span>
                               <ArrowUpRight className="w-3.5 h-3.5" />
                             </button>
                           </>

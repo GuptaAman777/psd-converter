@@ -121,6 +121,8 @@ def launch_liquid_studio():
         except Exception:
             pass
 
+    drop_handler = DOMEventHandler(_on_drop, prevent_default=True, stop_propagation=False)
+
     def _on_loaded():
         try:
             hwnd = int(getattr(win.native, "Handle", 0).ToInt64()) if hasattr(win.native, "Handle") else 0
@@ -128,11 +130,9 @@ def launch_liquid_studio():
         except Exception:
             pass
         try:
-            win.dom.document.events.drop -= _on_drop
-        except Exception:
-            pass
-        try:
-            win.dom.document.events.drop += DOMEventHandler(_on_drop, prevent_default=True, stop_propagation=False)
+            drop_event = win.dom.document.events.drop
+            if drop_handler not in getattr(drop_event, "_items", ()):
+                win.dom.document.events.drop += drop_handler
         except Exception:
             pass
 

@@ -9,7 +9,7 @@ from src.core.ncnn_runner import (
     build_esr_command, cleanup_stage_files, prepare_ncnn_stage,
     run_ncnn_process, sanitize_ncnn_gpu_args, save_high_quality_image
 )
-from src.utils.helpers import calculate_progress_info, get_tool_info, normalize_ncnn_format, resolve_conflict_path
+from src.utils.helpers import calculate_progress_info, EtaTracker, get_tool_info, normalize_ncnn_format, resolve_conflict_path
 
 
 class UpscalerThread(WorkerThread):
@@ -90,6 +90,7 @@ class UpscalerThread(WorkerThread):
 
     def run(self):
         self.start_time = time.time()
+        self._eta_tracker = EtaTracker(self.total_files)
         self.temp_dir = os.path.join(self.output_dir, "temp_upscale")
         os.makedirs(self.temp_dir, exist_ok=True)
 
@@ -190,10 +191,13 @@ class UpscalerThread(WorkerThread):
             return resized
         return img
 
-    def _update_progress_info(self, progress, sub_status=None):
-        eta_text, speed_text = calculate_progress_info(self.processed_files, self.total_files, self.start_time)
+    def _update_progress_info(self, progress, sub_status=None, units=None):
+        done = units if units is not None else self.processed_files
+        eta_text, speed_text = calculate_progress_info(
+            done, self.total_files, self.start_time, tracker=getattr(self, "_eta_tracker", None)
+        )
         if sub_status:
-            speed_text = sub_status if self.processed_files == 0 else f"{speed_text} • {sub_status}"
+            speed_text = sub_status if "Calculating" in speed_text else f"{speed_text} • {sub_status}"
         self.progress_signal.emit(progress, eta_text, speed_text)
 
     def _build_engine_cmd(self, model_type, in_path, out_path, out_format, scale_factor):
@@ -287,8 +291,9 @@ class UpscalerThread(WorkerThread):
 
         try:
             def _on_sub_progress(sub_pct):
-                overall = int(((file_index + (sub_pct / 100.0)) / max(1, self.total_files)) * 100)
-                self._update_progress_info(min(99, overall), sub_status=f"Current image: {sub_pct:.0f}%")
+                units_done = file_index + (sub_pct / 100.0)
+                overall = int((units_done / max(1, self.total_files)) * 100)
+                self._update_progress_info(min(99, overall), sub_status=f"Current image: {sub_pct:.0f}%", units=units_done)
 
             pass1_scale = 4 if needs_two_pass_8x else scale_factor
             cmd, exe_dir = self._build_engine_cmd(

@@ -639,6 +639,7 @@ class TestImageToolSuite(unittest.TestCase):
         from src.server.app import create_app
         from src.utils.updater import compare_versions
 
+        self.assertEqual(compare_versions("7.5", "7.0"), 1)
         self.assertEqual(compare_versions("7.0", "6.0"), 1)
         self.assertEqual(compare_versions("6.5", "7.0"), -1)
 
@@ -739,6 +740,201 @@ class TestImageToolSuite(unittest.TestCase):
             del_resp = client.delete("/api/models/4xLSDIRCompactC3")
             self.assertEqual(del_resp.status_code, 200)
             self.assertFalse(is_model_installed("4xLSDIRCompactC3"))
+
+    def test_30_janai_ncnn_catalog_and_inference(self):
+        """Verify all 22 JaNai NCNN models, GitHub v1.0.0 release download, Vulkan inference, and cleanup."""
+        from fastapi.testclient import TestClient
+        from src.core.janai_catalog import JANAI_MODEL_CATALOG, resolve_janai_model_paths
+        from src.core.janai_thread import JanaiUpscalerThread
+        from src.core.model_catalog import download_model_pack, is_model_installed
+        from src.server.app import create_app
+
+        self.assertEqual(len(JANAI_MODEL_CATALOG), 22)
+        self.assertFalse(os.path.exists("ncnn"))
+
+        client = TestClient(create_app())
+        boot = client.get("/api/bootstrap").json()
+        self.assertTrue(boot["tools"].get("janai_ncnn"))
+
+        janai_items = [m for m in boot["model_catalog"] if m.get("engine") == "janai_ncnn"]
+        self.assertEqual(len(janai_items), 22)
+        for item in janai_items:
+            self.assertEqual(
+                item["param_url"],
+                f"https://github.com/GuptaAman777/mangajanai-illustrationjanai-ncnn-vulkan/releases/download/v1.0.0/{item['id']}.ncnn.param",
+            )
+            self.assertEqual(
+                item["bin_url"],
+                f"https://github.com/GuptaAman777/mangajanai-illustrationjanai-ncnn-vulkan/releases/download/v1.0.0/{item['id']}.ncnn.bin",
+            )
+
+        target_id = "2x_IllustrationJaNai_V3detail_SPAN_S_40k_fp16"
+        was_installed = is_model_installed(target_id)
+        try:
+            info = download_model_pack(target_id)
+            self.assertTrue(info["installed"])
+            resolved = resolve_janai_model_paths(target_id)
+            self.assertTrue(resolved["installed"])
+            self.assertEqual(resolved["source"], "downloaded")
+
+            out_dir = os.path.join(self.temp_dir, "janai_out")
+            os.makedirs(out_dir, exist_ok=True)
+
+            # Odd-sized transparent PNG -> tests alpha preservation + tiled overlap path
+            src_rgba = os.path.join(self.temp_dir, "sprite_odd.png")
+            Image.new("RGBA", (75, 73), (40, 140, 220, 180)).save(src_rgba)
+
+            jt_span = JanaiUpscalerThread(
+                [src_rgba],
+                out_dir,
+                model_id=target_id,
+                tile_size=64,
+                use_fp16=True,
+            )
+            jt_span.run()
+            self.assertEqual(jt_span.success_count, 1)
+            out_span = os.path.join(out_dir, "sprite_odd_janai2x.png")
+            self.assertTrue(os.path.exists(out_span))
+            with Image.open(out_span) as res:
+                self.assertEqual(res.size, (75 * 2, 73 * 2))
+                self.assertEqual(res.mode, "RGBA")
+        finally:
+            if not was_installed and is_model_installed(target_id):
+                del_resp = client.delete(f"/api/models/{target_id}")
+                self.assertEqual(del_resp.status_code, 200)
+                self.assertFalse(is_model_installed(target_id))
+
+    def test_31_janai_autodetect_and_custom_workflows(self):
+        """Verify MangaJaNai Auto Detect (B&W height tiers vs Color), /api/janai/analyze, and chained custom workflows."""
+        from fastapi.testclient import TestClient
+        from src.core.janai_router import nearest_manga_tier, select_janai_route
+        from src.core.janai_thread import JanaiUpscalerThread
+        from src.core.model_catalog import download_model_pack, is_model_installed, remove_model_pack
+        from src.server.app import create_app
+
+        self.assertEqual(nearest_manga_tier(1180), 1200)
+        self.assertEqual(nearest_manga_tier(1420), 1400)
+        self.assertEqual(nearest_manga_tier(1890), 1920)
+        self.assertEqual(nearest_manga_tier(2100), 2048)
+
+        bw_scan = os.path.join(self.temp_dir, "bw_manga_page.jpg")
+        Image.new("RGB", (48, 64), (180, 180, 180)).save(bw_scan, "JPEG")
+
+        color_art = os.path.join(self.temp_dir, "color_cover.png")
+        Image.new("RGB", (40, 40), (220, 40, 110)).save(color_art, "PNG")
+
+        color_jpg = os.path.join(self.temp_dir, "color_scan.jpg")
+        Image.new("RGB", (40, 40), (40, 200, 130)).save(color_jpg, "JPEG")
+
+        r_bw = select_janai_route(bw_scan, mode="auto", auto_config={"scale": "2x"})
+        self.assertTrue(r_bw["analysis"]["is_grayscale"])
+        self.assertEqual(r_bw["model_id"], "2x_MangaJaNai_1200p_V1_ESRGAN_70k_fp16")
+
+        r_bw_4x = select_janai_route(bw_scan, mode="auto", auto_config={"scale": "4x"})
+        self.assertEqual(r_bw_4x["model_id"], "4x_MangaJaNai_1200p_V1_ESRGAN_70k_fp16")
+
+        r_color_png = select_janai_route(color_art, mode="auto", auto_config={"scale": "2x", "color_tier": "span"})
+        self.assertFalse(r_color_png["analysis"]["is_grayscale"])
+        self.assertEqual(r_color_png["model_id"], "2x_IllustrationJaNai_V3detail_SPAN_S_40k_fp16")
+
+        r_color_jpg = select_janai_route(color_jpg, mode="auto", auto_config={"scale": "2x", "color_tier": "span"})
+        self.assertEqual(r_color_jpg["model_id"], "2x_IllustrationJaNai_V3denoise_SPAN_S_30k_fp16")
+
+        r_color_xl = select_janai_route(color_art, mode="auto", auto_config={"scale": "2x", "color_tier": "fdat_xl"})
+        self.assertEqual(r_color_xl["model_id"], "4x_IllustrationJaNai_V3detail_FDAT_XL_27k_fp16")
+        self.assertEqual(r_color_xl["scale"], 4)
+
+        client = TestClient(create_app())
+        boot = client.get("/api/bootstrap").json()
+        self.assertGreaterEqual(len(boot.get("builtin_janai_workflows", [])), 5)
+
+        resp = client.post("/api/janai/analyze", json={
+            "paths": [bw_scan, color_art],
+            "mode": "auto",
+            "auto_config": {"scale": "4x", "color_tier": "fdat_m"},
+        })
+        self.assertEqual(resp.status_code, 200)
+        routes = resp.json()["routes"]
+        self.assertEqual(len(routes), 2)
+        self.assertEqual(routes[0]["model_id"], "4x_MangaJaNai_1200p_V1_ESRGAN_70k_fp16")
+        self.assertEqual(routes[1]["model_id"], "4x_IllustrationJaNai_V3detail_FDAT_M_40k_fp16")
+
+        # Download the two compact SPAN models live and run a chained 2x -> 2x = 4x workflow
+        span_denoise = "2x_IllustrationJaNai_V3denoise_SPAN_S_30k_fp16"
+        span_detail = "2x_IllustrationJaNai_V3detail_SPAN_S_40k_fp16"
+        pre_installed = {m: is_model_installed(m) for m in (span_denoise, span_detail)}
+        try:
+            for mid in (span_denoise, span_detail):
+                if not pre_installed[mid]:
+                    download_model_pack(mid)
+
+            chain_out = os.path.join(self.temp_dir, "janai_chain_out")
+            os.makedirs(chain_out, exist_ok=True)
+            jt_chain = JanaiUpscalerThread(
+                [color_art],
+                chain_out,
+                mode="workflow",
+                workflow={
+                    "grayscale_strategy": "auto_tier",
+                    "grayscale_scale": "2x",
+                    "color_model_id": span_denoise,
+                    "color_auto_denoise": False,
+                    "color_chain_id": span_detail,
+                },
+            )
+            jt_chain.run()
+            self.assertEqual(jt_chain.success_count, 1)
+            out_chained = os.path.join(chain_out, "color_cover_janai4x.png")
+            self.assertTrue(os.path.exists(out_chained))
+            with Image.open(out_chained) as ch_im:
+                self.assertEqual(ch_im.size, (160, 160))
+        finally:
+            for mid, was in pre_installed.items():
+                if not was and is_model_installed(mid):
+                    remove_model_pack(mid)
+
+    def test_32_eta_tracker_fractional_smoothing(self):
+        """Verify EtaTracker computes damped fractional ETA without oscillating between tiles."""
+        import time
+        from src.utils.helpers import EtaTracker
+
+        tracker = EtaTracker(total_items=10, start_time=0.0)
+        tracker.start_time = time.monotonic() - 2.0
+        tracker.last_sample_time = tracker.start_time
+        eta1, spd1 = tracker.update(1.5)
+        self.assertTrue(eta1.startswith("ETA:"))
+        self.assertNotIn("Calculating", eta1)
+        self.assertIn("Speed:", spd1)
+        v1 = tracker.last_eta_value
+
+        # Simulate sub-tile advancement inside the same file — ETA should decrease smoothly, not double upward
+        tracker.last_ui_time = time.monotonic() - 0.5
+        eta2, _ = tracker.update(2.0)
+        self.assertTrue(eta2.startswith("ETA:"))
+        self.assertLess(tracker.last_eta_value, v1)
+
+        eta_done, _ = tracker.update(10.0)
+        self.assertEqual(eta_done, "ETA: Finishing...")
+
+    def test_33_check_paths_and_preview_nostore(self):
+        """Verify /api/check-paths detects deleted compare files and /api/preview sets Cache-Control: no-store."""
+        from fastapi.testclient import TestClient
+        from src.server.app import create_app
+
+        existing_img = os.path.join(self.temp_dir, "keep_me.png")
+        deleted_img = os.path.join(self.temp_dir, "deleted_me.png")
+        Image.new("RGB", (24, 24), (30, 120, 220)).save(existing_img)
+
+        client = TestClient(create_app())
+        chk = client.post("/api/check-paths", json={"paths": [existing_img, deleted_img]})
+        self.assertEqual(chk.status_code, 200)
+        exists_map = chk.json()["exists"]
+        self.assertTrue(exists_map[existing_img])
+        self.assertFalse(exists_map[deleted_img])
+
+        prev = client.get("/api/preview", params={"path": existing_img, "max_size": 120, "v": "123"})
+        self.assertEqual(prev.status_code, 200)
+        self.assertIn("no-store", prev.headers.get("cache-control", "").lower())
 
 if __name__ == "__main__":
     unittest.main()

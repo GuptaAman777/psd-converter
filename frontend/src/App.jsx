@@ -18,6 +18,7 @@ import QueuePane from "./components/QueuePane";
 import ConverterWorkspace from "./components/ConverterWorkspace";
 import UpscalerWorkspace from "./components/UpscalerWorkspace";
 import DenoiserWorkspace from "./components/DenoiserWorkspace";
+import JanaiWorkspace from "./components/JanaiWorkspace";
 import StitcherWorkspace from "./components/StitcherWorkspace";
 import SettingsWorkspace from "./components/SettingsWorkspace";
 import ProgressHud from "./components/ProgressHud";
@@ -39,11 +40,13 @@ export default function App() {
     converter: emptyWorkspaceQueue(),
     upscaler: emptyWorkspaceQueue(),
     denoiser: emptyWorkspaceQueue(),
+    janai: emptyWorkspaceQueue(),
   });
   const [previewRules, setPreviewRules] = useState({
     converter: { suffix: "", ext: "png" },
     upscaler: { suffix: "_2x", ext: "" },
     denoiser: { suffix: "_denoised", ext: "" },
+    janai: { suffix: "_janai2x", ext: "" },
   });
 
   // Stitcher queue state
@@ -56,24 +59,44 @@ export default function App() {
   const [activeJob, setActiveJob] = useState(null);
   const [completion, setCompletion] = useState(null);
   const [errorAlert, setErrorAlert] = useState("");
-  const [recentPairs, setRecentPairs] = useState([]);
+  const [compareBatches, setCompareBatches] = useState([]);
+  const [activeCompareBatchId, setActiveCompareBatchId] = useState("");
   const [compareOpen, setCompareOpen] = useState(false);
   const [quickPreviewPath, setQuickPreviewPath] = useState("");
   const [gpuModalOpen, setGpuModalOpen] = useState(false);
   const [modelModalOpen, setModelModalOpen] = useState(false);
+  const [modelModalEngine, setModelModalEngine] = useState("all");
   const [modelDownloads, setModelDownloads] = useState({});
   const [externalUpscaleModel, setExternalUpscaleModel] = useState(null);
+  const [externalJanaiModel, setExternalJanaiModel] = useState(null);
+  const [janaiPrefs, setJanaiPrefs] = useState({
+    mode: "auto",
+    autoScale: "2x",
+    colorTier: "fdat_m",
+    colorDenoiseMode: "auto",
+    selectedWfId: "preset_mangajanai_2x",
+    family: "SPAN",
+    modelId: "2x_IllustrationJaNai_V3detail_SPAN_S_40k_fp16",
+    postResizeMode: "Native",
+    outputFormat: "Keep Original",
+    customSuffix: "",
+    conflictPolicy: "overwrite",
+    tileSize: "Auto (0)",
+    gpuId: "auto",
+    useFp16: true,
+  });
   const [dndResetTick, setDndResetTick] = useState(0);
 
   const activeTabRef = useRef(activeTab);
   activeTabRef.current = activeTab;
-  const autoOpenRef = useRef({ converter: false, upscaler: false, denoiser: false, stitcher: false });
+  const autoOpenRef = useRef({ converter: false, upscaler: false, denoiser: false, janai: false, stitcher: false });
 
   useEffect(() => {
     autoOpenRef.current = {
       converter: queues.converter.autoOpen,
       upscaler: queues.upscaler.autoOpen,
       denoiser: queues.denoiser.autoOpen,
+      janai: queues.janai.autoOpen,
       stitcher: stitchAutoOpen,
     };
   }, [queues, stitchAutoOpen]);
@@ -144,7 +167,7 @@ export default function App() {
         return;
       }
 
-      const exts = bootstrap?.formats?.[ws === "converter" ? "input" : ws === "upscaler" ? "upscale" : "denoise"];
+      const exts = bootstrap?.formats?.[ws === "converter" ? "input" : ws === "denoiser" ? "denoise" : "upscale"];
       const res = await apiPost("/api/probe", { paths, allowed_exts: exts });
       mergeProbedFiles(ws, res.files || []);
     },
@@ -167,7 +190,15 @@ export default function App() {
       } else if (msg.type === "completed") {
         setActiveJob(null);
         if (msg.pairs && msg.pairs.length > 0) {
-          setRecentPairs(msg.pairs);
+          const bid = msg.job_id || `batch_${Date.now()}`;
+          const batchEntry = {
+            id: bid,
+            workspace: msg.workspace || "job",
+            createdAt: Date.now(),
+            pairs: msg.pairs,
+          };
+          setCompareBatches((prev) => [batchEntry, ...prev.filter((b) => b.id !== bid)].slice(0, 20));
+          setActiveCompareBatchId(bid);
         }
         if (autoOpenRef.current[msg.workspace] && msg.output_dir) {
           openFolderInOS(msg.output_dir);
@@ -181,7 +212,7 @@ export default function App() {
       } else if (msg.type === "dnd_drop" && Array.isArray(msg.paths)) {
         setDndResetTick((t) => t + 1);
         const tab = activeTabRef.current;
-        const targetTab = ["converter", "upscaler", "denoiser", "stitcher"].includes(tab) ? tab : "converter";
+        const targetTab = ["converter", "upscaler", "denoiser", "janai", "stitcher"].includes(tab) ? tab : "converter";
         if (targetTab !== tab) setActiveTab(targetTab);
         handleDropPathsToWorkspace(targetTab, msg.paths);
       } else if (msg.type === "model_download" && msg.model_id) {
@@ -234,8 +265,9 @@ export default function App() {
       1: "converter",
       2: "upscaler",
       3: "denoiser",
-      4: "stitcher",
-      5: "settings",
+      4: "janai",
+      5: "stitcher",
+      6: "settings",
     };
     const onKey = (e) => {
       if (e.ctrlKey && mapKeys[e.key]) {
@@ -250,8 +282,27 @@ export default function App() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const installModelPack = useCallback(async (modelId) => {
+    setModelDownloads((prev) => {
+      if (prev[modelId]?.status === "downloading") return prev;
+      return {
+        ...prev,
+        [modelId]: { status: "downloading", percent: 2, detail: "Starting..." },
+      };
+    });
+    try {
+      await apiPost("/api/models/install", { model_id: modelId });
+    } catch (err) {
+      setModelDownloads((prev) => ({
+        ...prev,
+        [modelId]: { status: "error", percent: 0, detail: err.message || "Download failed" },
+      }));
+      setErrorAlert(err.message);
+    }
+  }, []);
+
   const handleBrowseFiles = async (ws) => {
-    const exts = bootstrap?.formats?.[ws === "converter" ? "input" : ws === "upscaler" ? "upscale" : "denoise"];
+    const exts = bootstrap?.formats?.[ws === "converter" ? "input" : ws === "denoiser" ? "denoise" : "upscale"];
     const chosen = await nativeBrowseFiles(exts);
     if (chosen && chosen.length > 0) {
       const res = await apiPost("/api/probe", { paths: chosen, allowed_exts: exts });
@@ -262,7 +313,7 @@ export default function App() {
   const handleBrowseFolder = async (ws) => {
     const folder = await nativeBrowseFolder();
     if (folder) {
-      const exts = bootstrap?.formats?.[ws === "converter" ? "input" : ws === "upscaler" ? "upscale" : "denoise"];
+      const exts = bootstrap?.formats?.[ws === "converter" ? "input" : ws === "denoiser" ? "denoise" : "upscale"];
       const res = await apiPost("/api/scan-folders", { folder, allowed_exts: exts, stitcher_mode: false });
       mergeProbedFiles(ws, res.files || []);
     }
@@ -340,6 +391,33 @@ export default function App() {
     ? currentQ.items.filter((it) => currentQ.selectedMap[it.path] !== false).length
     : 0;
 
+  const janaiSelectedFiles = useMemo(() => {
+    const q = queues.janai;
+    if (!q || !q.items) return [];
+    return q.items.filter((it) => q.selectedMap[it.path] !== false).map((it) => it.path);
+  }, [queues.janai]);
+
+  const updateConverterPreviewRule = useCallback(
+    (rule) => setPreviewRules((p) => ({ ...p, converter: rule })),
+    []
+  );
+  const updateUpscalerPreviewRule = useCallback(
+    (rule) => setPreviewRules((p) => ({ ...p, upscaler: rule })),
+    []
+  );
+  const updateDenoiserPreviewRule = useCallback(
+    (rule) => setPreviewRules((p) => ({ ...p, denoiser: rule })),
+    []
+  );
+  const updateJanaiPreviewRule = useCallback(
+    (rule) => setPreviewRules((p) => ({ ...p, janai: rule })),
+    []
+  );
+  const patchJanaiPrefs = useCallback(
+    (patch) => setJanaiPrefs((prev) => ({ ...prev, ...patch })),
+    []
+  );
+
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden relative">
       <LiquidBackdrop />
@@ -347,11 +425,16 @@ export default function App() {
       <FloatingDock
         activeTab={activeTab}
         onSelectTab={setActiveTab}
-        version={bootstrap?.version || "7.0"}
+        version={bootstrap?.version || "7.5"}
         gpuLabel={gpuShortLabel}
         vulkanOk={Boolean(bootstrap?.vulkan_support)}
-        hasComparePairs={recentPairs.length > 0}
-        onOpenCompare={() => setCompareOpen(true)}
+        hasComparePairs={compareBatches.some((b) => b.pairs.length > 0)}
+        onOpenCompare={() => {
+          if (compareBatches.length > 0 && !compareBatches.some((b) => b.id === activeCompareBatchId)) {
+            setActiveCompareBatchId(compareBatches[0].id);
+          }
+          setCompareOpen(true);
+        }}
         onOpenGpuInfo={() => setGpuModalOpen(true)}
         onOpenGithub={() => openExternalUrl("https://github.com/GuptaAman777/psd-converter")}
       />
@@ -360,7 +443,7 @@ export default function App() {
       <main className="flex-1 min-h-0 p-2 sm:p-3 lg:p-3.5 pt-1.5 sm:pt-2 overflow-y-auto lg:overflow-hidden">
         <div className="max-w-[2200px] mx-auto h-auto lg:h-full">
         <AnimatePresence mode="wait">
-          {["converter", "upscaler", "denoiser"].includes(activeTab) && (
+          {["converter", "upscaler", "denoiser", "janai"].includes(activeTab) && (
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 8, scale: 0.992 }}
@@ -375,9 +458,7 @@ export default function App() {
                   selectedCount={currentSelectedCount}
                   outputDir={currentQ.outputDir}
                   isBusy={Boolean(activeJob)}
-                  onPreviewRuleChange={(rule) =>
-                    setPreviewRules((p) => ({ ...p, converter: rule }))
-                  }
+                  onPreviewRuleChange={updateConverterPreviewRule}
                   onStart={(payload) => startWorkspaceJob("converter", payload)}
                 />
               )}
@@ -389,10 +470,11 @@ export default function App() {
                   outputDir={currentQ.outputDir}
                   isBusy={Boolean(activeJob)}
                   externalModelSelection={externalUpscaleModel}
-                  onOpenModelManager={() => setModelModalOpen(true)}
-                  onPreviewRuleChange={(rule) =>
-                    setPreviewRules((p) => ({ ...p, upscaler: rule }))
-                  }
+                  onOpenModelManager={() => {
+                    setModelModalEngine("realesr");
+                    setModelModalOpen(true);
+                  }}
+                  onPreviewRuleChange={updateUpscalerPreviewRule}
                   onStart={(payload) => startWorkspaceJob("upscaler", payload)}
                 />
               )}
@@ -403,10 +485,30 @@ export default function App() {
                   selectedCount={currentSelectedCount}
                   outputDir={currentQ.outputDir}
                   isBusy={Boolean(activeJob)}
-                  onPreviewRuleChange={(rule) =>
-                    setPreviewRules((p) => ({ ...p, denoiser: rule }))
-                  }
+                  onPreviewRuleChange={updateDenoiserPreviewRule}
                   onStart={(payload) => startWorkspaceJob("denoiser", payload)}
+                />
+              )}
+
+              {activeTab === "janai" && (
+                <JanaiWorkspace
+                  bootstrap={bootstrap}
+                  prefs={janaiPrefs}
+                  onChangePrefs={patchJanaiPrefs}
+                  selectedFiles={janaiSelectedFiles}
+                  selectedCount={currentSelectedCount}
+                  outputDir={currentQ.outputDir}
+                  isBusy={Boolean(activeJob)}
+                  externalModelSelection={externalJanaiModel}
+                  downloadProgress={modelDownloads}
+                  onInstallModel={installModelPack}
+                  onSaveSettings={handleSaveSettings}
+                  onOpenModelManager={() => {
+                    setModelModalEngine("janai_ncnn");
+                    setModelModalOpen(true);
+                  }}
+                  onPreviewRuleChange={updateJanaiPreviewRule}
+                  onStart={(payload) => startWorkspaceJob("janai", payload)}
                 />
               )}
 
@@ -550,7 +652,10 @@ export default function App() {
                 onClearLogs={() => setLogs([])}
                 onJumpToTab={(id) => setActiveTab(id)}
                 onOpenGpuInfo={() => setGpuModalOpen(true)}
-                onOpenModelManager={() => setModelModalOpen(true)}
+                onOpenModelManager={() => {
+                  setModelModalEngine("all");
+                  setModelModalOpen(true);
+                }}
               />
             </motion.div>
           )}
@@ -562,10 +667,26 @@ export default function App() {
         activeJob={activeJob}
         completion={completion}
         errorAlert={errorAlert}
+        liquidGlass={bootstrap?.settings?.progress_liquid_glass !== false}
         onCancel={handleCancelJob}
         onOpenFolder={openFolderInOS}
-        onCompare={(pairs) => {
-          setRecentPairs(pairs);
+        onCompare={(pairs, meta) => {
+          const bid = meta?.job_id || `batch_${Date.now()}`;
+          if (pairs && pairs.length > 0) {
+            setCompareBatches((prev) => {
+              if (prev.some((b) => b.id === bid)) return prev;
+              return [
+                {
+                  id: bid,
+                  workspace: meta?.workspace || "job",
+                  createdAt: Date.now(),
+                  pairs,
+                },
+                ...prev,
+              ].slice(0, 20);
+            });
+            setActiveCompareBatchId(bid);
+          }
           setCompletion(null);
           setCompareOpen(true);
         }}
@@ -575,7 +696,33 @@ export default function App() {
 
       <CompareModal
         open={compareOpen}
-        pairs={recentPairs}
+        batches={compareBatches}
+        activeBatchId={activeCompareBatchId}
+        onSelectBatch={(bid) => setActiveCompareBatchId(bid)}
+        onRemovePair={(bid, pairIdx) => {
+          setCompareBatches((prev) => {
+            const next = prev
+              .map((b) =>
+                b.id === bid
+                  ? { ...b, pairs: b.pairs.filter((_, i) => i !== pairIdx) }
+                  : b
+              )
+              .filter((b) => b.pairs.length > 0);
+            if (!next.some((b) => b.id === activeCompareBatchId)) {
+              setActiveCompareBatchId(next[0]?.id || "");
+            }
+            return next;
+          });
+        }}
+        onRemoveBatch={(bid) => {
+          setCompareBatches((prev) => {
+            const next = prev.filter((b) => b.id !== bid);
+            if (activeCompareBatchId === bid) {
+              setActiveCompareBatchId(next[0]?.id || "");
+            }
+            return next;
+          });
+        }}
         onClose={() => setCompareOpen(false)}
       />
 
@@ -589,21 +736,12 @@ export default function App() {
         onClose={() => setModelModalOpen(false)}
         catalog={bootstrap?.model_catalog || []}
         downloadProgress={modelDownloads}
+        initialEngineFilter={modelModalEngine}
         confirmInstall={bootstrap?.settings?.confirm_model_install !== false}
         confirmDelete={bootstrap?.settings?.confirm_model_delete !== false}
         onSetConfirmInstall={(val) => handleSaveSettings({ confirm_model_install: val })}
         onSetConfirmDelete={(val) => handleSaveSettings({ confirm_model_delete: val })}
-        onInstall={async (modelId) => {
-          setModelDownloads((prev) => ({
-            ...prev,
-            [modelId]: { status: "downloading", percent: 2, detail: "Starting..." },
-          }));
-          try {
-            await apiPost("/api/models/install", { model_id: modelId });
-          } catch (err) {
-            setErrorAlert(err.message);
-          }
-        }}
+        onInstall={installModelPack}
         onRemove={async (modelId) => {
           try {
             const res = await apiDelete(`/api/models/${encodeURIComponent(modelId)}`);
@@ -619,8 +757,13 @@ export default function App() {
         }}
         onUseModel={(item) => {
           setModelModalOpen(false);
-          setActiveTab("upscaler");
-          setExternalUpscaleModel({ model: item.engine || "realesr", style_model: item.id, tick: Date.now() });
+          if (item.engine === "janai_ncnn") {
+            setActiveTab("janai");
+            setExternalJanaiModel({ model_id: item.id, tick: Date.now() });
+          } else {
+            setActiveTab("upscaler");
+            setExternalUpscaleModel({ model: item.engine || "realesr", style_model: item.id, tick: Date.now() });
+          }
         }}
       />
 

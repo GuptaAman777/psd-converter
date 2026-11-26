@@ -30,7 +30,11 @@ from src.constants import (
 )
 from src.core.converter_thread import ConverterThread
 from src.core.denoiser_thread import DenoiserThread
-from src.core.model_catalog import download_model_pack, get_catalog_status, remove_model_pack
+from src.core.janai_router import BUILTIN_JANAI_WORKFLOWS, select_janai_route
+from src.core.janai_thread import JanaiUpscalerThread
+from src.core.model_catalog import (
+    download_model_pack, get_catalog_status, is_model_downloading, remove_model_pack
+)
 from src.core.stitcher_thread import StitcherThread
 from src.core.upscaler_thread import UpscalerThread
 from src.utils.helpers import (
@@ -99,13 +103,13 @@ def _probe_single_file(fp: str) -> dict[str, Any]:
             "exists": False,
         }
 
-    mtime = os.path.getmtime(fp)
-    cache_key = (fp, mtime)
+    st = os.stat(fp)
+    cache_key = (fp, st.st_mtime_ns, st.st_size)
     if cache_key in hub.meta_cache:
         return hub.meta_cache[cache_key]
 
     ext = os.path.splitext(fp)[1].lower().lstrip(".")
-    size_bytes = os.path.getsize(fp)
+    size_bytes = st.st_size
     size_str = format_size(size_bytes)
     w, h, mode, layers = 0, 0, ext.upper(), 0
     dims = ""
@@ -161,9 +165,9 @@ def _probe_single_file(fp: str) -> dict[str, Any]:
 def _render_preview_bytes(fp: str, max_size: int = 420) -> bytes:
     if not fp or not os.path.exists(fp):
         raise FileNotFoundError(fp)
-    mtime = os.path.getmtime(fp)
+    st = os.stat(fp)
     max_size = max(64, min(2400, int(max_size)))
-    key = (fp, mtime, max_size)
+    key = (fp, st.st_mtime_ns, st.st_size, max_size)
     if key in hub.preview_cache:
         return hub.preview_cache[key]
 
@@ -256,6 +260,18 @@ class ModelInstallRequest(BaseModel):
     model_id: str
 
 
+class CheckPathsRequest(BaseModel):
+    paths: list[str]
+
+
+class AnalyzeJanaiRequest(BaseModel):
+    paths: list[str]
+    mode: str = "auto"
+    model_id: str = ""
+    auto_config: Optional[dict[str, Any]] = None
+    workflow: Optional[dict[str, Any]] = None
+
+
 def create_app(frontend_dist: Optional[str] = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
@@ -295,6 +311,12 @@ def create_app(frontend_dist: Optional[str] = None) -> FastAPI:
         for k in ("esr", "waifu2x", "realcugan", "srmd"):
             exe_p, _ = get_tool_info(k)
             tools[k] = bool(exe_p and os.path.exists(exe_p))
+        try:
+            import ncnn as _ncnn_mod
+            import numpy as _np_mod
+            tools["janai_ncnn"] = bool(_ncnn_mod and _np_mod)
+        except Exception:
+            tools["janai_ncnn"] = False
 
         return {
             "version": APP_VERSION,
@@ -306,6 +328,7 @@ def create_app(frontend_dist: Optional[str] = None) -> FastAPI:
             "vulkan_support": detect_vulkan_support(),
             "tools": tools,
             "model_catalog": get_catalog_status(),
+            "builtin_janai_workflows": BUILTIN_JANAI_WORKFLOWS,
             "formats": {
                 "input": INPUT_FORMATS,
                 "output": OUTPUT_FORMATS,
@@ -455,24 +478,68 @@ def create_app(frontend_dist: Optional[str] = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="File not found")
         try:
             data = _render_preview_bytes(decoded, max_size=max_size)
-            return Response(content=data, media_type="image/webp")
+            return Response(
+                content=data,
+                media_type="image/webp",
+                headers={"Cache-Control": "no-store, max-age=0"},
+            )
         except Exception as e:
             raise HTTPException(status_code=422, detail=str(e))
+
+    @app.post("/api/check-paths")
+    def api_check_paths(req: CheckPathsRequest):
+        exists_map = {}
+        for fp in req.paths or []:
+            if fp:
+                exists_map[fp] = bool(os.path.isfile(fp))
+        return {"exists": exists_map}
 
     @app.get("/api/models/catalog")
     def api_model_catalog():
         return {"models": get_catalog_status()}
 
+    @app.post("/api/janai/analyze")
+    def api_janai_analyze(req: AnalyzeJanaiRequest):
+        routes = []
+        missing_set = set()
+        for fp in (req.paths or [])[:250]:
+            if not fp or not os.path.isfile(fp):
+                continue
+            try:
+                r = select_janai_route(
+                    fp,
+                    mode=req.mode,
+                    model_id=req.model_id,
+                    auto_config=req.auto_config,
+                    workflow=req.workflow,
+                )
+                for mid in r.get("missing_models") or []:
+                    missing_set.add(mid)
+                routes.append({
+                    "path": fp,
+                    "name": os.path.basename(fp),
+                    **r,
+                })
+            except Exception as exc:
+                routes.append({
+                    "path": fp,
+                    "name": os.path.basename(fp),
+                    "error": str(exc),
+                })
+        return {"routes": routes, "missing_models": sorted(missing_set)}
+
     @app.post("/api/models/install")
     def api_model_install(req: ModelInstallRequest):
         model_id = req.model_id.strip()
+        if is_model_downloading(model_id):
+            return {"started": False, "already_downloading": True, "model_id": model_id}
 
         def _worker():
             try:
                 last_pct = [-1]
 
                 def _on_prog(pct: int, detail: str):
-                    if pct != last_pct[0] and (pct == 100 or pct - last_pct[0] >= 4):
+                    if pct < 100 and pct != last_pct[0] and pct - last_pct[0] >= 4:
                         last_pct[0] = pct
                         hub.broadcast({
                             "type": "model_download",
@@ -508,6 +575,8 @@ def create_app(frontend_dist: Optional[str] = None) -> FastAPI:
 
     @app.delete("/api/models/{model_id}")
     def api_model_remove(model_id: str):
+        if is_model_downloading(model_id):
+            raise HTTPException(status_code=409, detail="Cannot delete model while it is currently downloading")
         try:
             remove_model_pack(model_id)
             logger.log(f"Removed custom AI model pack: {model_id}", "INFO")
@@ -665,6 +734,44 @@ def create_app(frontend_dist: Optional[str] = None) -> FastAPI:
                 conflict_policy=str(p.get("conflict_policy", "overwrite")),
                 thread_spec=str(p.get("thread_spec", "1:2:2")),
                 blend_pct=int(p.get("blend_pct", 100)),
+            )
+            hub.active_jobs[job_id] = {"worker": worker, "workspace": ws, "cancelled": False}
+
+            worker.progress_signal.connect(lambda val, eta, spd: hub.broadcast({
+                "type": "progress", "job_id": job_id, "workspace": ws,
+                "percent": val, "eta": eta, "speed": spd,
+            }))
+            worker.log_signal.connect(lambda msg, lvl: logger.log(msg, lvl))
+            worker.error_signal.connect(lambda msg, _t: _emit_job_error(job_id, ws, msg))
+            worker.completion_signal.connect(
+                lambda last_p, in_b, out_b, ok_c, fail_c: _emit_job_complete(
+                    job_id, ws, os.path.dirname(last_p) if last_p else out_dir, out_dir,
+                    in_b, out_b, ok_c, fail_c, 0, getattr(worker, "processed_pairs", [])
+                )
+            )
+            worker.start()
+
+        elif ws == "janai":
+            files = p.get("files", [])
+            if not files or not out_dir:
+                raise HTTPException(status_code=400, detail="Missing files or output directory")
+            raw_tile = str(p.get("tile_size", "0")).strip().lower()
+            tile_val = -1 if raw_tile in ("full", "none", "-1") else parse_tile_size(raw_tile)
+            worker = JanaiUpscalerThread(
+                files,
+                out_dir,
+                model_id=str(p.get("model_id", "2x_IllustrationJaNai_V3detail_SPAN_S_40k_fp16")),
+                keep_format=bool(p.get("keep_format", True)),
+                output_format=str(p.get("output_format", "PNG")),
+                tile_size=tile_val,
+                use_fp16=bool(p.get("use_fp16", True)),
+                gpu_id=str(p.get("gpu_id", "auto")),
+                custom_suffix=str(p.get("custom_suffix", "")),
+                conflict_policy=str(p.get("conflict_policy", "overwrite")),
+                post_resize_mode=str(p.get("post_resize_mode", "Native")),
+                mode=str(p.get("mode", "single")),
+                auto_config=p.get("auto_config") or {},
+                workflow=p.get("workflow") or {},
             )
             hub.active_jobs[job_id] = {"worker": worker, "workspace": ws, "cancelled": False}
 

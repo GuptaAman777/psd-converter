@@ -1,5 +1,5 @@
 # Application Constants
-APP_VERSION = "7.0"
+APP_VERSION = "7.5"
 GITHUB_REPO_URL = "https://github.com/GuptaAman777/psd-converter"
 GITHUB_RELEASES_URL = "https://api.github.com/repos/GuptaAman777/psd-converter/releases/latest"
 GITHUB_PROFILE_URL = "https://github.com/GuptaAman777"
